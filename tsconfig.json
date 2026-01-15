@@ -1,0 +1,21 @@
+{
+  "extends": "@react-native/typescript-config",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "App.tsx", "index.js"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/Pods/**",
+    "**/android/**",
+    "**/ios/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "strict": false
+  }
+}
