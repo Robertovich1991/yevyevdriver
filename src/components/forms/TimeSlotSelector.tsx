@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
 } from 'react-native';
 import { colors } from '../../assets/style/colors';
 import { typography } from '../../assets/style/typography';
@@ -15,17 +14,28 @@ import {
   SLOT_END,
   slotToTime,
   getPeriodSlots,
+  type AvailabilityStatus,
+  getStatusColor,
 } from '../../types/availability';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getCreateEditAvailabilityTranslations } from '../../i18n/translations';
 
 interface TimeSlotSelectorProps {
-  selectedSlots: number[];
-  onSlotsChange: (slots: number[]) => void;
+  slotStatuses: { [time: string]: AvailabilityStatus };
+  currentStatus: AvailabilityStatus;
+  onSlotToggle: (time: string) => void;
+  onBatchUpdate?: (updates: { [time: string]: AvailabilityStatus | null }) => void;
 }
 
 export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
-  selectedSlots,
-  onSlotsChange,
+  slotStatuses,
+  currentStatus,
+  onSlotToggle,
+  onBatchUpdate,
 }) => {
+  const language = useLanguageStore((s) => s.language);
+  const t = useMemo(() => getCreateEditAvailabilityTranslations(language), [language]);
+
   // Generate all available time slots
   const allSlots = useMemo(() => {
     const slots: number[] = [];
@@ -35,67 +45,135 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     return slots;
   }, []);
 
-  // Check if a period is fully selected
+  // Get slot status for a given slot number
+  const getSlotStatus = useCallback(
+    (slot: number): AvailabilityStatus | null => {
+      const time = slotToTime(slot);
+      return slotStatuses[time] || null;
+    },
+    [slotStatuses]
+  );
+
+  // Check if a period has slots with the current status
   const isPeriodFullySelected = useCallback(
     (period: keyof typeof TIME_PERIODS): boolean => {
       const periodSlots = getPeriodSlots(period);
-      return periodSlots.every((slot) => selectedSlots.includes(slot));
+      return periodSlots.every((slot) => {
+        const time = slotToTime(slot);
+        return slotStatuses[time] === currentStatus;
+      });
     },
-    [selectedSlots]
+    [slotStatuses, currentStatus]
   );
 
-  // Check if a period is partially selected
+  // Check if a period is partially selected (has some slots with any status)
   const isPeriodPartiallySelected = useCallback(
     (period: keyof typeof TIME_PERIODS): boolean => {
       const periodSlots = getPeriodSlots(period);
-      const hasSelected = periodSlots.some((slot) => selectedSlots.includes(slot));
-      const hasUnselected = periodSlots.some((slot) => !selectedSlots.includes(slot));
+      const hasSelected = periodSlots.some((slot) => {
+        const time = slotToTime(slot);
+        return slotStatuses[time] !== undefined;
+      });
+      const hasUnselected = periodSlots.some((slot) => {
+        const time = slotToTime(slot);
+        return slotStatuses[time] === undefined;
+      });
       return hasSelected && hasUnselected;
     },
-    [selectedSlots]
+    [slotStatuses]
   );
 
   // Toggle individual slot
   const toggleSlot = useCallback(
     (slot: number) => {
-      if (selectedSlots.includes(slot)) {
-        onSlotsChange(selectedSlots.filter((s) => s !== slot));
-      } else {
-        onSlotsChange([...selectedSlots, slot].sort((a, b) => a - b));
-      }
+      const time = slotToTime(slot);
+      onSlotToggle(time);
     },
-    [selectedSlots, onSlotsChange]
+    [onSlotToggle]
   );
 
-  // Toggle period (morning/afternoon/evening)
+  // Toggle period (morning/afternoon/evening) - set all to current status or remove if all have current status
   const togglePeriod = useCallback(
     (period: keyof typeof TIME_PERIODS) => {
       const periodSlots = getPeriodSlots(period);
-      const allSelected = periodSlots.every((s) => selectedSlots.includes(s));
+      const allHaveCurrentStatus = periodSlots.every((slot) => {
+        const time = slotToTime(slot);
+        return slotStatuses[time] === currentStatus;
+      });
 
-      if (allSelected) {
-        // Remove all slots in this period
-        onSlotsChange(selectedSlots.filter((s) => !periodSlots.includes(s)));
+      if (onBatchUpdate) {
+        // Use batch update for better performance
+        const updates: { [time: string]: AvailabilityStatus | null } = {};
+        periodSlots.forEach((slot) => {
+          const time = slotToTime(slot);
+          if (allHaveCurrentStatus) {
+            // Remove slots with current status
+            if (slotStatuses[time] === currentStatus) {
+              updates[time] = null;
+            }
+          } else {
+            // Set all slots to current status
+            updates[time] = currentStatus;
+          }
+        });
+        onBatchUpdate(updates);
       } else {
-        // Add all slots in this period
-        const newSlots = [...new Set([...selectedSlots, ...periodSlots])].sort(
-          (a, b) => a - b
-        );
-        onSlotsChange(newSlots);
+        // Fallback to individual toggles
+        if (allHaveCurrentStatus) {
+          periodSlots.forEach((slot) => {
+            const time = slotToTime(slot);
+            if (slotStatuses[time] === currentStatus) {
+              onSlotToggle(time);
+            }
+          });
+        } else {
+          periodSlots.forEach((slot) => {
+            const time = slotToTime(slot);
+            if (slotStatuses[time] !== currentStatus) {
+              onSlotToggle(time);
+            }
+          });
+        }
       }
     },
-    [selectedSlots, onSlotsChange]
+    [slotStatuses, currentStatus, onSlotToggle, onBatchUpdate]
   );
 
   // Clear all slots
   const clearAll = useCallback(() => {
-    onSlotsChange([]);
-  }, [onSlotsChange]);
+    if (onBatchUpdate) {
+      const updates: { [time: string]: AvailabilityStatus | null } = {};
+      Object.keys(slotStatuses).forEach((time) => {
+        updates[time] = null;
+      });
+      onBatchUpdate(updates);
+    } else {
+      Object.keys(slotStatuses).forEach((time) => {
+        onSlotToggle(time);
+      });
+    }
+  }, [slotStatuses, onSlotToggle, onBatchUpdate]);
 
-  // Select all slots
+  // Select all slots with current status
   const selectAll = useCallback(() => {
-    onSlotsChange(allSlots);
-  }, [allSlots, onSlotsChange]);
+    if (onBatchUpdate) {
+      const updates: { [time: string]: AvailabilityStatus | null } = {};
+      allSlots.forEach((slot) => {
+        const time = slotToTime(slot);
+        if (slotStatuses[time] !== currentStatus) {
+          updates[time] = currentStatus;
+        }
+      });
+      onBatchUpdate(updates);
+    } else {
+      allSlots.forEach((slot) => {
+        const time = slotToTime(slot);
+        if (slotStatuses[time] !== currentStatus) {
+          onSlotToggle(time);
+        }
+      });
+    }
+  }, [allSlots, slotStatuses, currentStatus, onSlotToggle, onBatchUpdate]);
 
   // Render period button
   const renderPeriodButton = (
@@ -129,32 +207,50 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     );
   };
 
+  // Get status icon
+  const getStatusIcon = (status: AvailabilityStatus): string => {
+    switch (status) {
+      case 'available':
+        return '✓';
+      case 'not-available':
+        return '✕';
+      case 'conditional':
+        return '!';
+      default:
+        return '';
+    }
+  };
+
   // Render time slot button
   const renderSlotButton = (slot: number) => {
-    const isSelected = selectedSlots.includes(slot);
     const timeStr = slotToTime(slot);
+    const slotStatus = getSlotStatus(slot);
+    const isSelected = slotStatus === currentStatus;
+    const backgroundColor = slotStatus ? getStatusColor(slotStatus) : colors.lightGrey;
+    const textColor = slotStatus ? colors.white : colors.textSecondary;
 
     return (
       <TouchableOpacity
         key={slot}
-        style={[styles.slotButton, isSelected && styles.slotButtonSelected]}
+        style={[styles.slotButton, { backgroundColor }]}
         onPress={() => toggleSlot(slot)}
         activeOpacity={0.7}
       >
-        <Text
-          style={[styles.slotText, isSelected && styles.slotTextSelected]}
-        >
+        <Text style={[styles.slotText, { color: textColor }]}>
           {timeStr}
+          {slotStatus && (
+            <Text style={styles.slotIcon}> {getStatusIcon(slotStatus)}</Text>
+          )}
         </Text>
       </TouchableOpacity>
     );
   };
 
-  // Group slots into rows of 4
+  // Group slots into rows of 6 for better fit without scrolling
   const slotRows = useMemo(() => {
     const rows: number[][] = [];
-    for (let i = 0; i < allSlots.length; i += 4) {
-      rows.push(allSlots.slice(i, i + 4));
+    for (let i = 0; i < allSlots.length; i += 6) {
+      rows.push(allSlots.slice(i, i + 6));
     }
     return rows;
   }, [allSlots]);
@@ -162,17 +258,17 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Text style={styles.title}>Select Time Slots</Text>
+      <Text style={styles.title}>{t.selectTimeSlots}</Text>
       <Text style={styles.subtitle}>
-        {selectedSlots.length} slot{selectedSlots.length !== 1 ? 's' : ''}{' '}
-        selected
+        {Object.keys(slotStatuses).length}{' '}
+        {Object.keys(slotStatuses).length !== 1 ? t.slots : t.slot} {t.selected}
       </Text>
 
       {/* Period Quick Select Buttons */}
       <View style={styles.periodButtonsContainer}>
-        {renderPeriodButton('morning', 'Morning\n(6-12)')}
-        {renderPeriodButton('afternoon', 'Afternoon\n(12-18)')}
-        {renderPeriodButton('evening', 'Evening\n(18-24)')}
+        {renderPeriodButton('morning', t.morningWithTime)}
+        {renderPeriodButton('afternoon', t.afternoonWithTime)}
+        {renderPeriodButton('evening', t.eveningWithTime)}
       </View>
 
       {/* Action Buttons */}
@@ -182,7 +278,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           onPress={selectAll}
           activeOpacity={0.7}
         >
-          <Text style={styles.actionButtonText}>Select All</Text>
+          <Text style={styles.actionButtonText}>{t.selectAll}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.clearButton]}
@@ -190,25 +286,19 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           activeOpacity={0.7}
         >
           <Text style={[styles.actionButtonText, styles.clearButtonText]}>
-            Clear All
+            {t.clearAll}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Time Slots Grid */}
-      <ScrollView
-        style={styles.gridScrollView}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled
-      >
-        <View style={styles.gridContainer}>
-          {slotRows.map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.slotRow}>
-              {row.map((slot) => renderSlotButton(slot))}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+      <View style={styles.gridContainer}>
+        {slotRows.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.slotRow}>
+            {row.map((slot) => renderSlotButton(slot))}
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
@@ -284,10 +374,6 @@ const styles = StyleSheet.create({
   clearButtonText: {
     color: colors.textSecondary,
   },
-  gridScrollView: {
-    flex: 1,
-    maxHeight: 300,
-  },
   gridContainer: {
     paddingBottom: spacing.md,
   },
@@ -299,12 +385,12 @@ const styles = StyleSheet.create({
   slotButton: {
     flex: 1,
     backgroundColor: colors.lightGrey,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     marginHorizontal: spacing.xs / 2,
     borderRadius: spacing.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: 36,
   },
   slotButtonSelected: {
     backgroundColor: colors.primary,
@@ -314,8 +400,8 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.medium,
     color: colors.textSecondary,
   },
-  slotTextSelected: {
-    color: colors.white,
-    fontWeight: typography.fontWeight.semibold,
+  slotIcon: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
   },
 });

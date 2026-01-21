@@ -11,10 +11,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
-const USER_DATA_KEY = '@user_data';
-const TOKEN_KEY = '@auth_token';
-const API_BASE_URL = 'http://192.168.100.12:8000/api/v1';
-const API_URL = 'http://192.168.100.12:8000';
+import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -140,7 +137,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         label="Phone"
         keyboardType="phone-pad"
         placeholder="Enter your phone number"
-        value={+374+phone}
+        value={phone}
         onChangeText={setPhone}
       />
       <TextInputField

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,23 +19,41 @@ import { colors } from '../../assets/style/colors';
 import { typography } from '../../assets/style/typography';
 import { spacing } from '../../assets/style/spacing';
 import type { ScheduleStackParamList } from '../../navigation/ScheduleStackNavigator';
-import type { Availability, AvailabilityStatus } from '../../types/availability';
+import type { Availability } from '../../types/availability';
 import {
   formatDate,
   formatDateForApi,
   getStatusColor,
   getStatusLabel,
-  slotToTime,
+  type AvailabilityStatus,
 } from '../../types/availability';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getAvailabilityListTranslations } from '../../i18n/translations';
+import { getCreateEditAvailabilityTranslations } from '../../i18n/translations';
+
+import { API_BASE_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 
 type NavigationProp = NativeStackNavigationProp<ScheduleStackParamList, 'AvailabilityList'>;
 
-const API_BASE_URL = 'http://192.168.100.12:8000/api/v1';
-const TOKEN_KEY = '@auth_token';
-const USER_DATA_KEY = '@user_data';
-
 export const AvailabilityListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const language = useLanguageStore((s) => s.language);
+  const t = useMemo(() => getAvailabilityListTranslations(language), [language]);
+  const tAvailability = useMemo(() => getCreateEditAvailabilityTranslations(language), [language]);
+
+  // Helper function to translate status labels
+  const getTranslatedStatusLabel = (status: AvailabilityStatus): string => {
+    switch (status) {
+      case 'available':
+        return tAvailability.available;
+      case 'not-available':
+        return tAvailability.notAvailable;
+      case 'conditional':
+        return tAvailability.conditional;
+      default:
+        return status;
+    }
+  };
 
   // State
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -120,18 +138,18 @@ export const AvailabilityListScreen: React.FC = () => {
 
   const handleDeleteAvailability = (id: number) => {
     Alert.alert(
-      'Delete Availability',
-      'Are you sure you want to delete this availability record?',
+      t.deleteAvailability,
+      t.deleteAvailabilityConfirm,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem(TOKEN_KEY);
               if (!token) {
-                Alert.alert('Error', 'Authentication token not found.');
+                Alert.alert(t.error, t.authTokenNotFound);
                 return;
               }
 
@@ -141,13 +159,13 @@ export const AvailabilityListScreen: React.FC = () => {
                 },
               });
 
-              Alert.alert('Success', 'Availability deleted successfully.');
+              Alert.alert(t.success, t.availabilityDeletedSuccess);
               loadAvailabilities();
             } catch (e: any) {
               console.error('Delete error:', e);
               Alert.alert(
-                'Error',
-                e.response?.data?.message || 'Failed to delete availability.'
+                t.error,
+                e.response?.data?.message || t.failedToDeleteAvailability
               );
             }
           },
@@ -171,23 +189,30 @@ export const AvailabilityListScreen: React.FC = () => {
     const backgroundColor = getStatusColor(status);
     return (
       <View style={[styles.statusBadge, { backgroundColor }]}>
-        <Text style={styles.statusBadgeText}>{getStatusLabel(status)}</Text>
+        <Text style={styles.statusBadgeText}>{getTranslatedStatusLabel(status)}</Text>
       </View>
     );
   };
 
-  const renderTimeSlots = (timeSlots: string[]) => {
-    const displaySlots = timeSlots.slice(0, 5);
-    const remaining = timeSlots.length - 5;
+  const renderTimeSlots = (slotStatuses: { [time: string]: AvailabilityStatus }) => {
+    const timeEntries = Object.entries(slotStatuses);
+    const displaySlots = timeEntries.slice(0, 5);
+    const remaining = timeEntries.length - 5;
 
     return (
       <View style={styles.timeSlotsContainer}>
         <View style={styles.timeSlotsRow}>
-          {displaySlots.map((slot, index) => (
-            <View key={index} style={styles.timeSlotChip}>
-              <Text style={styles.timeSlotChipText}>{slot}</Text>
-            </View>
-          ))}
+          {displaySlots.map(([time, status], index) => {
+            const statusColor = getStatusColor(status);
+            return (
+              <View
+                key={index}
+                style={[styles.timeSlotChip, { backgroundColor: statusColor }]}
+              >
+                <Text style={styles.timeSlotChipText}>{time}</Text>
+              </View>
+            );
+          })}
           {remaining > 0 && (
             <View style={[styles.timeSlotChip, styles.moreChip]}>
               <Text style={styles.moreChipText}>+{remaining}</Text>
@@ -198,45 +223,59 @@ export const AvailabilityListScreen: React.FC = () => {
     );
   };
 
-  const renderItem = ({ item }: { item: Availability }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => handleEditAvailability(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderLeft}>
-          <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
-          {renderStatusBadge(item.availability)}
+  const renderItem = ({ item }: { item: Availability }) => {
+    // Handle both new format (slotStatuses) and legacy format (timeSlots + availability)
+    const slotStatuses = item.slotStatuses || (item.timeSlots && item.availability
+      ? Object.fromEntries(item.timeSlots.map((time) => [time, item.availability!]))
+      : {});
+    const slotCount = Object.keys(slotStatuses).length;
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => handleEditAvailability(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Text style={styles.cardDate}>{formatDate(item.date)}</Text>
+            {slotCount > 0 && (
+              <Text style={styles.slotCountBadge}>
+                {slotCount} {slotCount !== 1 ? t.timeSlots : t.timeSlot}
+              </Text>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteAvailability(item.id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.deleteButtonText}>×</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteAvailability(item.id)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Text style={styles.deleteButtonText}>×</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.cardBody}>
-        <Text style={styles.slotsLabel}>
-          {item.timeSlots.length} time slot{item.timeSlots.length !== 1 ? 's' : ''}:
-        </Text>
-        {renderTimeSlots(item.timeSlots)}
-      </View>
+        <View style={styles.cardBody}>
+          {slotCount > 0 && (
+            <>
+              <Text style={styles.slotsLabel}>{t.timeSlots || 'Time Slots'}:</Text>
+              {renderTimeSlots(slotStatuses)}
+            </>
+          )}
+        </View>
 
-      <View style={styles.cardFooter}>
-        <Text style={styles.tapToEdit}>Tap to edit →</Text>
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.cardFooter}>
+          <Text style={styles.tapToEdit}>{t.tapToEdit}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>📅</Text>
-      <Text style={styles.emptyTitle}>No Availability Records</Text>
+      <Text style={styles.emptyTitle}>{t.noAvailabilityRecords}</Text>
       <Text style={styles.emptySubtitle}>
-        Tap the button below to add your availability
+        {t.tapToAddAvailability}
       </Text>
     </View>
   );
@@ -244,18 +283,18 @@ export const AvailabilityListScreen: React.FC = () => {
   const renderFilters = () => (
     <View style={styles.filtersContainer}>
       <View style={styles.filterRow}>
-        <Text style={styles.filterLabel}>Filter by Date:</Text>
+        <Text style={styles.filterLabel}>{t.filterByDate}</Text>
         <TouchableOpacity
           style={styles.datePickerButton}
           onPress={() => setShowDatePicker(true)}
         >
           <Text style={styles.datePickerButtonText}>
-            {filterDate ? formatDateForApi(filterDate) : 'Select Date'}
+            {filterDate ? formatDateForApi(filterDate) : t.selectDate}
           </Text>
         </TouchableOpacity>
         {filterDate && (
           <TouchableOpacity style={styles.clearFilterButton} onPress={clearFilters}>
-            <Text style={styles.clearFilterText}>Clear</Text>
+            <Text style={styles.clearFilterText}>{t.clear}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -275,13 +314,13 @@ export const AvailabilityListScreen: React.FC = () => {
     <ScreenContainer>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>My Availability</Text>
+        <Text style={styles.title}>{t.myAvailability}</Text>
         <TouchableOpacity
           style={styles.filterToggleButton}
           onPress={() => setShowFilters(!showFilters)}
         >
           <Text style={styles.filterToggleText}>
-            {showFilters ? 'Hide Filters' : 'Filters'}
+            {showFilters ? t.hideFilters : t.filters}
           </Text>
         </TouchableOpacity>
       </View>
@@ -390,9 +429,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.black,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 2,
   },
@@ -423,6 +462,15 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
     color: colors.white,
+  },
+  slotCountBadge: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondary,
+    backgroundColor: colors.lightGrey,
+    paddingVertical: spacing.xs / 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: spacing.borderRadius.sm,
   },
   deleteButton: {
     width: 28,
@@ -512,7 +560,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.black,
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,

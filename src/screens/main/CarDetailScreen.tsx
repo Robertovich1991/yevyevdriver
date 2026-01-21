@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform, PermissionsAndroid, Linking } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,13 +10,13 @@ import { Button } from '../../components/ui/Button';
 import type { ProfileStackParamList } from '../../navigation/ProfileStackNavigator';
 import { theme } from '../../assets/style/theme';
 import { Icon } from '../../assets/icons/Icon';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getCarDetailTranslations } from '../../i18n/translations';
+
+import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'CarDetail'>;
 
-const TOKEN_KEY = '@auth_token';
-const USER_DATA_KEY = '@user_data';
-const API_BASE_URL = 'http://192.168.100.12:8000/api/v1';
-const API_URL = 'http://192.168.100.12:8000';
 interface CarPhoto {
   filename: string;
   path: string;
@@ -38,6 +38,8 @@ interface CarData {
 export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { carId, car } = route.params || {};
   const isEditing = !!carId || !!car;
+  const language = useLanguageStore((s) => s.language);
+  const t = useMemo(() => getCarDetailTranslations(language), [language]);
   
   const [carData, setCarData] = useState<CarData>({
     brand: '',
@@ -81,7 +83,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found.');
+        Alert.alert(t.error, t.authTokenNotFound);
         return;
       }
 
@@ -105,7 +107,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       
       if (!car || (typeof car === 'object' && Object.keys(car).length === 0)) {
         console.error('No car data in response:', response.data);
-        Alert.alert('Error', 'No car data received from server.');
+        Alert.alert(t.error, t.noCarDataReceived);
         return;
       }
 
@@ -136,7 +138,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         e.response?.data?.error ||
         e.message ||
         'Failed to load car data.';
-      Alert.alert('Error', errorMessage);
+      Alert.alert(t.error, errorMessage);
       // Don't navigate back on error, keep existing data visible
     }
   };
@@ -155,11 +157,11 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
-          title: 'Camera Permission Required',
-          message: 'This app needs access to your camera to take photos for your car pictures.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
+          title: t.cameraPermissionRequired,
+          message: t.cameraPermissionMessage,
+          buttonNeutral: t.cancel,
+          buttonNegative: t.cancel,
+          buttonPositive: t.ok,
         }
       );
 
@@ -174,9 +176,9 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     const hasPermission = await requestCameraPermission();
     if (!hasPermission) {
       Alert.alert(
-        'Permission Required',
-        'Camera permission is required to take photos. Please enable it in your device settings.',
-        [{ text: 'OK' }]
+        t.permissionRequired,
+        t.cameraPermissionRequiredSettings,
+        [{ text: t.ok }]
       );
       return null;
     }
@@ -198,19 +200,19 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
         if (response.errorCode || response.errorMessage) {
           console.error('Camera error:', response.errorCode, response.errorMessage);
-          let errorMessage = 'Failed to open camera. Please try again.';
+          let errorMessage = t.failedToOpenCamera;
           
           if (response.errorCode === 'camera_unavailable') {
-            errorMessage = 'Camera is not available on this device.';
+            errorMessage = t.cameraUnavailable;
           } else if (response.errorCode === 'permission') {
-            errorMessage = 'Camera permission was denied. Please enable it in your device settings.';
+            errorMessage = t.cameraPermissionDenied;
             Alert.alert(
-              'Permission Denied',
+              t.permissionDenied,
               errorMessage,
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t.cancel, style: 'cancel' },
                 {
-                  text: 'Open Settings',
+                  text: t.openSettings,
                   onPress: () => Linking.openSettings(),
                 },
               ]
@@ -221,12 +223,12 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               (response.errorMessage?.includes('Manifest.permission.CAMERA') || 
                response.errorMessage?.includes('permission'))) {
             Alert.alert(
-              'Camera Permission Required',
-              'Camera permission is required. Please enable it in your device settings, then try again.',
+              t.cameraPermissionRequired,
+              t.cameraPermissionRequiredSettings,
               [
-                { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
+                { text: t.cancel, style: 'cancel', onPress: () => resolve(null) },
                 {
-                  text: 'Open Settings',
+                  text: t.openSettings,
                   onPress: () => {
                     Linking.openSettings();
                     resolve(null);
@@ -239,7 +241,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             errorMessage = response.errorMessage;
           }
           
-          Alert.alert('Camera Error', errorMessage);
+          Alert.alert(t.cameraError, errorMessage);
           resolve(null);
           return;
         }
@@ -258,12 +260,12 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found. Please login again.');
+        Alert.alert(t.error, t.pleaseLoginAgain);
         return null;
       }
 
       if (!imageAsset.uri) {
-        Alert.alert('Error', 'Image URI not found.');
+        Alert.alert(t.error, t.imageUriNotFound);
         return null;
       }
 
@@ -290,7 +292,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       
       if (!uploadResponse) {
         console.error('Upload response:', response.data);
-        Alert.alert('Error', 'Image uploaded but no data received from server.');
+        Alert.alert(t.error, t.imageUploadedNoData);
         return null;
       }
 
@@ -304,7 +306,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       // Validate that at least one of url or path exists
       if (!photoObject.url && !photoObject.path) {
         console.error('Upload response:', response.data);
-        Alert.alert('Error', 'Image uploaded but no URL or path received from server.');
+        Alert.alert(t.error, t.imageUploadedNoUrl);
         return null;
       }
 
@@ -315,8 +317,8 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
         e.response?.data?.message ||
         e.response?.data?.error ||
         e.message ||
-        'Failed to upload image. Please try again.';
-      Alert.alert('Error', errorMessage);
+        t.failedToUploadImage;
+      Alert.alert(t.error, errorMessage);
       return null;
     }
   };
@@ -324,12 +326,12 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
   const handleTakeCarPhoto = async () => {
     try {
       if (carData.photos.length >= 6) {
-        Alert.alert('Limit', 'You can add maximum 6 car photos.');
+        Alert.alert(t.limit, t.maxPhotosLimit);
         return;
       }
 
       if (uploadingPhoto) {
-        Alert.alert('Please wait', 'Another photo is being uploaded.');
+        Alert.alert(t.pleaseWait, t.pleaseWaitUploading);
         return;
       }
 
@@ -341,9 +343,9 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
           const photoInfo = await uploadImage(asset);
           if (photoInfo) {
             setCarData({ ...carData, photos: [...carData.photos, photoInfo] });
-            Alert.alert('Success', 'Car photo uploaded successfully!');
+            Alert.alert(t.success, t.photoUploadedSuccess);
           } else {
-            Alert.alert('Error', 'Failed to upload photo. Please try again.');
+            Alert.alert(t.error, t.photoUploadFailed);
           }
         } finally {
           setUploadingPhoto(false);
@@ -352,7 +354,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     } catch (e) {
       console.error('Error taking car photo:', e);
       setUploadingPhoto(false);
-      Alert.alert('Error', 'Failed to take photo.');
+      Alert.alert(t.error, t.failedToTakePhoto);
     }
   };
 
@@ -366,12 +368,12 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     if (!carData.id) {
       // For new cars, just remove from local state
       Alert.alert(
-        'Remove Photo',
-        'Are you sure you want to remove this photo?',
+        t.remove,
+        t.removePhotoConfirm,
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: t.cancel, style: 'cancel' },
           {
-            text: 'Remove',
+            text: t.remove,
             style: 'destructive',
             onPress: () => {
               const updatedPhotos = carData.photos.filter((_, i) => i !== index);
@@ -384,25 +386,25 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     }
 
     Alert.alert(
-      'Remove Photo',
-      'Are you sure you want to remove this photo?',
+      t.remove,
+      t.removePhotoConfirm,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Remove',
+          text: t.remove,
           style: 'destructive',
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem(TOKEN_KEY);
               if (!token) {
-                Alert.alert('Error', 'Authentication token not found.');
+                Alert.alert(t.error, t.authTokenNotFound);
                 return;
               }
 
               const photoObj = photo as CarPhoto;
               
               if (!photoObj.path) {
-                Alert.alert('Error', 'Cannot delete photo: missing path.');
+                Alert.alert(t.error, t.cannotDeletePhotoMissingPath);
                 return;
               }
 
@@ -426,15 +428,15 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 setCarData({ ...currentCarData, photos: updatedPhotos });
               }
 
-              Alert.alert('Success', 'Photo deleted successfully!');
+              Alert.alert(t.success, t.photoDeletedSuccess);
             } catch (e: any) {
               console.error('Delete photo error:', e);
               const errorMessage =
                 e.response?.data?.message ||
                 e.response?.data?.error ||
                 e.message ||
-                'Failed to delete photo. Please try again.';
-              Alert.alert('Error', errorMessage);
+                t.failedToDeletePhoto;
+              Alert.alert(t.error, errorMessage);
             }
           },
         },
@@ -447,21 +449,21 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       setSaving(true);
 
       if (!carData.brand || !carData.model || !carData.licensePlate) {
-        Alert.alert('Error', 'Please fill in brand, model, and license plate.');
+        Alert.alert(t.error, t.fillRequiredFields);
         setSaving(false);
         return;
       }
 
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found. Please login again.');
+        Alert.alert(t.error, t.pleaseLoginAgain);
         setSaving(false);
         return;
       }
 
       const userDataString = await AsyncStorage.getItem(USER_DATA_KEY);
       if (!userDataString) {
-        Alert.alert('Error', 'User data not found. Please login again.');
+        Alert.alert(t.error, t.userDataNotFound);
         setSaving(false);
         return;
       }
@@ -506,7 +508,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
             Authorization: `Bearer ${token}`,
           },
         });
-        Alert.alert('Success', 'Car updated successfully!');
+        Alert.alert(t.success, t.carUpdatedSuccess);
       } else {
         // Add new car
         await axios.post(`${API_BASE_URL}/cars/add`, carPayload, {
@@ -515,7 +517,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
             Authorization: `Bearer ${token}`,
           },
         });
-        Alert.alert('Success', 'Car added successfully!');
+        Alert.alert(t.success, t.carAddedSuccess);
       }
 
       navigation.goBack();
@@ -525,8 +527,8 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
         e.response?.data?.message ||
         e.response?.data?.error ||
         e.message ||
-        'Failed to save car. Please try again.';
-      Alert.alert('Error', errorMessage);
+        t.failedToSaveCar;
+      Alert.alert(t.error, errorMessage);
     } finally {
       setSaving(false);
     }
@@ -534,24 +536,24 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
 
   const handleDelete = async () => {
     if (!carData.id) {
-      Alert.alert('Error', 'Cannot delete car without ID.');
+      Alert.alert(t.error, t.cannotDeleteCarWithoutId);
       return;
     }
 
     Alert.alert(
-      'Delete Car',
-      'Are you sure you want to delete this car? This action cannot be undone.',
+      t.deleteCar,
+      t.deleteCarConfirm,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               setDeleting(true);
               const token = await AsyncStorage.getItem(TOKEN_KEY);
               if (!token) {
-                Alert.alert('Error', 'Authentication token not found.');
+                Alert.alert(t.error, t.authTokenNotFound);
                 return;
               }
 
@@ -561,9 +563,9 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 },
               });
 
-              Alert.alert('Success', 'Car deleted successfully!', [
+              Alert.alert(t.success, t.carDeletedSuccess, [
                 {
-                  text: 'OK',
+                  text: t.ok,
                   onPress: () => navigation.goBack(),
                 },
               ]);
@@ -573,8 +575,8 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 e.response?.data?.message ||
                 e.response?.data?.error ||
                 e.message ||
-                'Failed to delete car. Please try again.';
-              Alert.alert('Error', errorMessage);
+                t.failedToDeleteCar;
+              Alert.alert(t.error, errorMessage);
             } finally {
               setDeleting(false);
             }
@@ -588,53 +590,53 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>{isEditing ? 'Edit Car' : 'Add New Car'}</Text>
+          <Text style={styles.title}>{isEditing ? t.editCar : t.addNewCar}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Car Information</Text>
+          <Text style={styles.sectionTitle}>{t.carInformation}</Text>
           
           <TextInputField
-            label="Brand"
-            placeholder="e.g., Toyota"
+            label={t.brand}
+            placeholder={t.brandPlaceholder}
             value={carData.brand}
             onChangeText={(text) => setCarData({ ...carData, brand: text })}
           />
           <TextInputField
-            label="Model"
-            placeholder="e.g., Camry"
+            label={t.model}
+            placeholder={t.modelPlaceholder}
             value={carData.model}
             onChangeText={(text) => setCarData({ ...carData, model: text })}
           />
           <TextInputField
-            label="Year"
-            placeholder="e.g., 2020"
+            label={t.year}
+            placeholder={t.yearPlaceholder}
             keyboardType="number-pad"
             value={carData.year}
             onChangeText={(text) => setCarData({ ...carData, year: text })}
           />
           <TextInputField
-            label="Color"
-            placeholder="e.g., Black"
+            label={t.color}
+            placeholder={t.colorPlaceholder}
             value={carData.color}
             onChangeText={(text) => setCarData({ ...carData, color: text })}
           />
           <TextInputField
-            label="Car Number (License Plate)"
-            placeholder="e.g., ABC-1234"
+            label={t.licensePlate}
+            placeholder={t.licensePlatePlaceholder}
             autoCapitalize="characters"
             value={carData.licensePlate}
             onChangeText={(text) => setCarData({ ...carData, licensePlate: text })}
           />
           <TextInputField
-            label="Car Type"
-            placeholder="e.g., Sedan, SUV, Hatchback"
+            label={t.carType}
+            placeholder={t.carTypePlaceholder}
             value={carData.type}
             onChangeText={(text) => setCarData({ ...carData, type: text })}
           />
           <TextInputField
-            label="Seats"
-            placeholder="e.g., 4, 5, 6, 7"
+            label={t.seats}
+            placeholder={t.seatsPlaceholder}
             keyboardType="number-pad"
             value={carData.seats}
             onChangeText={(text) => setCarData({ ...carData, seats: text })}
@@ -644,15 +646,15 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
         {/* Car Photos Section */}
         <View style={styles.section}>
           <View style={styles.photosHeader}>
-            <Text style={styles.sectionTitle}>Car Photos</Text>
+            <Text style={styles.sectionTitle}>{t.carPhotos}</Text>
             {carData.photos.length < 6 && !uploadingPhoto && (
               <TouchableOpacity onPress={handleTakeCarPhoto} style={styles.addPhotoButton}>
-                <Text style={styles.addPhotoText}>+ Add Photo</Text>
+                <Text style={styles.addPhotoText}>{t.addPhoto}</Text>
               </TouchableOpacity>
             )}
             {uploadingPhoto && (
               <View style={styles.uploadingButton}>
-                <Text style={styles.uploadingText}>Uploading...</Text>
+                <Text style={styles.uploadingText}>{t.uploading}</Text>
               </View>
             )}
           </View>
@@ -684,20 +686,20 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                   style={styles.addPhotoBox}
                 >
                   <Icon name="ok" size={32} color={theme.colors.primary} />
-                  <Text style={styles.addPhotoBoxLabel}>Take Photo</Text>
+                  <Text style={styles.addPhotoBoxLabel}>{t.takePhoto}</Text>
                 </TouchableOpacity>
               )}
               {uploadingPhoto && (
                 <View style={styles.addPhotoBox}>
                   <Icon name="pending" size={32} color={theme.colors.textSecondary} />
-                  <Text style={styles.addPhotoBoxLabel}>Uploading...</Text>
+                  <Text style={styles.addPhotoBoxLabel}>{t.uploading}</Text>
                 </View>
               )}
             </View>
             ) : uploadingPhoto ? (
             <View style={styles.emptyPhotosContainer}>
               <Icon name="pending" size={48} color={theme.colors.textSecondary} />
-              <Text style={styles.emptyPhotosLabel}>Uploading photo...</Text>
+              <Text style={styles.emptyPhotosLabel}>{t.uploadingPhoto}</Text>
             </View>
           ) : (
             <TouchableOpacity
@@ -705,23 +707,23 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               style={styles.emptyPhotosContainer}
             >
               <Icon name="ok" size={48} color={theme.colors.primary} />
-              <Text style={styles.emptyPhotosLabel}>Take your first car photo</Text>
+              <Text style={styles.emptyPhotosLabel}>{t.takeFirstPhoto}</Text>
             </TouchableOpacity>
           )}
-          <Text style={styles.photoHint}>You can add up to 6 photos (camera only)</Text>
+          <Text style={styles.photoHint}>{t.photoHint}</Text>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
           <Button 
-            title={isEditing ? 'Update Car' : 'Add Car'} 
+            title={isEditing ? t.updateCar : t.addCar} 
             onPress={handleSave} 
             loading={saving} 
           />
           {isEditing && (
             <View style={styles.deleteButtonContainer}>
               <Button
-                title="Delete Car"
+                title={t.deleteCar}
                 onPress={handleDelete}
                 loading={deleting}
               />
@@ -739,7 +741,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
   },
   title: {
-    ...theme.typography.h1,
     fontSize: 28,
     color: theme.colors.textPrimary,
   },
@@ -748,7 +749,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
   },
   sectionTitle: {
-    ...theme.typography.h4,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
@@ -765,7 +765,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.spacing.borderRadius.sm,
   },
   addPhotoText: {
-    ...theme.typography.bodySmall,
     color: theme.colors.white,
     fontWeight: theme.typography.fontWeight.semibold,
   },
@@ -776,7 +775,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.spacing.borderRadius.sm,
   },
   uploadingText: {
-    ...theme.typography.bodySmall,
     color: theme.colors.white,
     fontWeight: theme.typography.fontWeight.semibold,
   },
@@ -828,7 +826,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   addPhotoBoxLabel: {
-    ...theme.typography.caption,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
     marginTop: theme.spacing.xs,
@@ -844,13 +841,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.backgroundLight,
   },
   emptyPhotosLabel: {
-    ...theme.typography.bodySmall,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
     marginTop: theme.spacing.sm,
   },
   photoHint: {
-    ...theme.typography.caption,
     color: theme.colors.textLight,
     marginTop: theme.spacing.sm,
     fontStyle: 'italic',

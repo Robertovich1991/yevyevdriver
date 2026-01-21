@@ -24,12 +24,12 @@ export const AuthNavigator: React.FC = () => (
     <Stack.Screen
       name="Login"
       component={LoginScreen}
-      options={{ title: 'Login' }}
+      options={{ title: 'Login', headerShown: false }}
     />
     <Stack.Screen
       name="Register"
       component={RegisterScreen}
-      options={{ title: 'Register' }}
+      options={{ title: 'Register', headerShown: false }}
     />
     <Stack.Screen
       name="PhoneAuth"

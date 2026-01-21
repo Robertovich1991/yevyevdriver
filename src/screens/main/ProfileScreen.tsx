@@ -9,11 +9,7 @@ import { useDriverStore } from '../../store/useDriverStore';
 import type { ProfileStackParamList } from '../../navigation/ProfileStackNavigator';
 import { theme } from '../../assets/style/theme';
 import { Icon } from '../../assets/icons/Icon';
-
-const USER_DATA_KEY = '@user_data';
-const TOKEN_KEY = '@auth_token';
-const API_BASE_URL = 'http://192.168.100.12:8000/api/v1';
-const API_URL = 'http://192.168.100.12:8000';
+import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 interface UserData {
   name: string;
   surname: string;
@@ -55,7 +51,8 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      // Reload cars when screen comes into focus (e.g., after adding/editing a car)
+      // Reload user data and cars when screen comes into focus (e.g., after editing profile or car)
+      loadUserData();
       loadCars();
     });
     return unsubscribe;
@@ -345,11 +342,22 @@ console.log(cars,'[[[[[[[[[[[[[[[[[[[[[[[[[[[[');
 
         {/* Name and Surname */}
         <View style={styles.nameSection}>
-          <Text style={styles.nameText}>{firstName}</Text>
-          {lastName && <Text style={styles.surnameText}>{lastName}</Text>}
-          {userData?.email && (
-            <Text style={styles.emailText}>{userData.email}</Text>
-          )}
+          <View style={styles.nameRow}>
+            <View style={styles.nameContainer}>
+              <Text style={styles.nameText}>{firstName}</Text>
+              {lastName && <Text style={styles.surnameText}>{lastName}</Text>}
+              {userData?.email && (
+                <Text style={styles.emailText}>{userData.email}</Text>
+              )}
+            </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditProfile')}
+              style={styles.editButton}
+              activeOpacity={0.7}
+            >
+              <Icon name="edit" size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Cars List Section */}
@@ -483,26 +491,44 @@ const styles = StyleSheet.create({
   },
   avatarHint: {
     marginTop: theme.spacing.sm,
-    ...theme.typography.caption,
     color: theme.colors.textSecondary,
   },
   nameSection: {
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    width: '100%',
+    paddingHorizontal: theme.spacing.md,
+  },
+  nameContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   nameText: {
-    ...theme.typography.h2,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   surnameText: {
-    ...theme.typography.h2,
     color: theme.colors.textPrimary,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   emailText: {
-    ...theme.typography.body,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.sm,
+  },
+  editButton: {
+    padding: theme.spacing.xs,
+    borderRadius: theme.spacing.borderRadius.sm,
+    backgroundColor: theme.colors.lightGrey,
+    marginLeft: theme.spacing.sm,
   },
   editSection: {
     marginBottom: 24,
@@ -519,7 +545,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
   },
   sectionTitle: {
-    ...theme.typography.h4,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
@@ -683,13 +708,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   emptyCarsText: {
-    ...theme.typography.body,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
     marginBottom: theme.spacing.xs,
   },
   emptyCarsHint: {
-    ...theme.typography.bodySmall,
     color: theme.colors.textLight,
   },
   carCard: {
@@ -698,9 +721,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.shadow,
+    shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 2,
     elevation: 2,
   },
@@ -731,13 +754,11 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.sm,
   },
   carCardTitle: {
-    ...theme.typography.body,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.xs,
   },
   carCardSubtitle: {
-    ...theme.typography.bodySmall,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.xs,
   },
@@ -746,7 +767,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   carCardDetail: {
-    ...theme.typography.caption,
     color: theme.colors.textLight,
   },
   carCardArrow: {

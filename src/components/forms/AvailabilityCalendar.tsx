@@ -1,16 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { DriverAvailability, Weekday } from '../../types/driver';
-
-const DAYS: { key: Weekday; label: string }[] = [
-  { key: 'monday', label: 'Mon' },
-  { key: 'tuesday', label: 'Tue' },
-  { key: 'wednesday', label: 'Wed' },
-  { key: 'thursday', label: 'Thu' },
-  { key: 'friday', label: 'Fri' },
-  { key: 'saturday', label: 'Sat' },
-  { key: 'sunday', label: 'Sun' },
-];
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getAvailabilityCalendarTranslations } from '../../i18n/translations';
 
 interface Props {
   value: DriverAvailability;
@@ -21,13 +13,26 @@ export const AvailabilityCalendar: React.FC<Props> = ({
   value,
   onChange,
 }) => {
+  const language = useLanguageStore((s) => s.language);
+  const t = useMemo(() => getAvailabilityCalendarTranslations(language), [language]);
+
+  const DAYS: { key: Weekday; label: string }[] = useMemo(() => [
+    { key: 'monday', label: t.monday },
+    { key: 'tuesday', label: t.tuesday },
+    { key: 'wednesday', label: t.wednesday },
+    { key: 'thursday', label: t.thursday },
+    { key: 'friday', label: t.friday },
+    { key: 'saturday', label: t.saturday },
+    { key: 'sunday', label: t.sunday },
+  ], [t]);
+
   const toggleDay = (day: Weekday) => {
     onChange({ ...value, [day]: !value[day] });
   };
 
   return (
     <View>
-      <Text style={styles.title}>Weekly availability</Text>
+      <Text style={styles.title}>{t.weeklyAvailability}</Text>
       <View style={styles.row}>
         {DAYS.map((d) => {
           const active = value[d.key];
@@ -45,7 +50,7 @@ export const AvailabilityCalendar: React.FC<Props> = ({
         })}
       </View>
       <Text style={styles.legend}>
-        Tap to toggle: green = available, gray = not available
+        {t.legend}
       </Text>
     </View>
   );

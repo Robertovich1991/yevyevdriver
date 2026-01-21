@@ -6,10 +6,12 @@ export interface Availability {
   id: number;
   userId: number;
   date: string; // Format: "YYYY-MM-DD"
-  timeSlots: string[]; // Array of time strings in "HH:mm" format
-  availability: AvailabilityStatus;
+  slotStatuses: { [time: string]: AvailabilityStatus }; // Map of time strings (HH:mm) to status
   createdAt?: string;
   updatedAt?: string;
+  // Legacy fields for backward compatibility (may be present in API responses)
+  timeSlots?: string[];
+  availability?: AvailabilityStatus;
 }
 
 export type AvailabilityStatus = 'available' | 'not-available' | 'conditional';
@@ -17,15 +19,13 @@ export type AvailabilityStatus = 'available' | 'not-available' | 'conditional';
 export interface AvailabilityCreatePayload {
   userId: number;
   date: string;
-  timeSlots: string[];
-  availability?: AvailabilityStatus;
+  slotStatuses: { [time: string]: AvailabilityStatus };
 }
 
 export interface AvailabilityUpdatePayload {
   userId?: number;
   date?: string;
-  timeSlots?: string[];
-  availability?: AvailabilityStatus;
+  slotStatuses?: { [time: string]: AvailabilityStatus };
 }
 
 export interface AvailabilityListResponse {

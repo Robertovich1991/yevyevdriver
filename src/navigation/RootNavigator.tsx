@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from './AuthNavigator';
 import { AppTabsNavigator } from './AppTabsNavigator';
 import { useAuthStore } from '../store/useAuthStore';
+import { useLanguageStore } from '../store/useLanguageStore';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -17,20 +18,25 @@ const TOKEN_KEY = '@auth_token';
 export const RootNavigator: React.FC = () => {
   const token = useAuthStore((s) => s.token);
   const setToken = useAuthStore((s) => s.setToken);
+  const loadLanguage = useLanguageStore((s) => s.loadLanguage);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadToken();
+    loadAppData();
   }, []);
 
-  const loadToken = async () => {
+  const loadAppData = async () => {
     try {
+      // Load language first (defaults to Armenian)
+      await loadLanguage();
+      
+      // Load token
       const savedToken = await AsyncStorage.getItem(TOKEN_KEY);
       if (savedToken) {
         setToken(savedToken);
       }
     } catch (e) {
-      console.error('Error loading token:', e);
+      console.error('Error loading app data:', e);
     } finally {
       setLoading(false);
     }

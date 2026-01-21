@@ -38,7 +38,11 @@ export type IconName =
   | 'deselected-radio'
   | 'pending'
   | 'tablo-green'
-  | 'tablo-grey';
+  | 'tablo-grey'
+  | 'profile'
+  | 'calendar'
+  | 'orders'
+  | 'settings';
 
 // Dynamic SVG loader
 const loadSvgIcon = (name: IconName): React.ComponentType<SvgProps> | null => {
@@ -106,6 +110,14 @@ const loadSvgIcon = (name: IconName): React.ComponentType<SvgProps> | null => {
         return require('../../assets/svgs/tablo-green.svg').default;
       case 'tablo-grey':
         return require('../../assets/svgs/tablo-grey.svg').default;
+      case 'profile':
+        return require('../../assets/svgs/profile.svg').default;
+      case 'calendar':
+        return require('../../assets/svgs/calendar.svg').default;
+      case 'orders':
+        return require('../../assets/svgs/orders.svg').default;
+      case 'settings':
+        return require('../../assets/svgs/settings.svg').default;
       default:
         return null;
     }
@@ -154,10 +166,12 @@ export const Icon: React.FC<IconProps> = ({
 };
 
 // Image icon component for PNG/JPG icons
+import { ImageStyle } from 'react-native';
+
 interface ImageIconProps {
   source: ImageSourcePropType;
   size?: number;
-  style?: ViewStyle;
+  style?: ImageStyle;
   tintColor?: string;
 }
 

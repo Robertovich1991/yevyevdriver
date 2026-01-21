@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,18 +25,16 @@ import type { ScheduleStackParamList } from '../../navigation/ScheduleStackNavig
 import type { AvailabilityStatus } from '../../types/availability';
 import {
   formatDateForApi,
-  slotsToTimes,
-  timesToSlots,
   getStatusColor,
   getStatusLabel,
 } from '../../types/availability';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getCreateEditAvailabilityTranslations } from '../../i18n/translations';
+
+import { API_BASE_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 
 type NavigationProp = NativeStackNavigationProp<ScheduleStackParamList, 'CreateEditAvailability'>;
 type RouteProps = RouteProp<ScheduleStackParamList, 'CreateEditAvailability'>;
-
-const API_BASE_URL = 'http://192.168.100.12:8000/api/v1';
-const TOKEN_KEY = '@auth_token';
-const USER_DATA_KEY = '@user_data';
 
 const STATUS_OPTIONS: AvailabilityStatus[] = ['available', 'not-available', 'conditional'];
 
@@ -45,13 +43,28 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
   const route = useRoute<RouteProps>();
   
   const { availability, isEditing } = route.params || {};
+  const language = useLanguageStore((s) => s.language);
+  const t = useMemo(() => getCreateEditAvailabilityTranslations(language), [language]);
+
+  // Helper function to translate status labels
+  const getTranslatedStatusLabel = (status: AvailabilityStatus): string => {
+    switch (status) {
+      case 'available':
+        return t.available;
+      case 'not-available':
+        return t.notAvailable;
+      case 'conditional':
+        return t.conditional;
+      default:
+        return status;
+    }
+  };
 
   // Form state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
-  const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus>('available');
+  const [slotStatuses, setSlotStatuses] = useState<{ [time: string]: AvailabilityStatus }>({});
+  const [currentStatus, setCurrentStatus] = useState<AvailabilityStatus>('available');
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Initialize form with existing data if editing
@@ -68,15 +81,16 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
         setSelectedDate(date);
       }
 
-      // Convert time strings to slot numbers
-      if (availability.timeSlots && availability.timeSlots.length > 0) {
-        const slots = timesToSlots(availability.timeSlots);
-        setSelectedSlots(slots);
-      }
-
-      // Set status
-      if (availability.availability) {
-        setAvailabilityStatus(availability.availability);
+      // Load slotStatuses from availability
+      if (availability.slotStatuses) {
+        setSlotStatuses(availability.slotStatuses);
+      } else if (availability.timeSlots && availability.availability) {
+        // Legacy: convert old format to new format
+        const legacySlotStatuses: { [time: string]: AvailabilityStatus } = {};
+        availability.timeSlots.forEach((time) => {
+          legacySlotStatuses[time] = availability.availability!;
+        });
+        setSlotStatuses(legacySlotStatuses);
       }
     }
   }, [isEditing, availability]);
@@ -90,11 +104,11 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
 
   const validateForm = (): { valid: boolean; error?: string } => {
     if (!selectedDate) {
-      return { valid: false, error: 'Please select a date.' };
+      return { valid: false, error: t.pleaseSelectDate };
     }
 
-    if (selectedSlots.length === 0) {
-      return { valid: false, error: 'Please select at least one time slot.' };
+    if (Object.keys(slotStatuses).length === 0) {
+      return { valid: false, error: t.pleaseSelectTimeSlot };
     }
 
     // Check for past dates (only for new records)
@@ -105,7 +119,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
       selected.setHours(0, 0, 0, 0);
       
       if (selected < today) {
-        return { valid: false, error: 'Cannot select past dates.' };
+        return { valid: false, error: t.cannotSelectPastDates };
       }
     }
 
@@ -115,7 +129,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
   const handleSave = async () => {
     const validation = validateForm();
     if (!validation.valid) {
-      Alert.alert('Validation Error', validation.error);
+      Alert.alert(t.validationError, validation.error || '');
       return;
     }
 
@@ -124,14 +138,14 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
 
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        Alert.alert('Error', 'Authentication token not found. Please login again.');
+        Alert.alert(t.error, t.authTokenNotFound);
         setSaving(false);
         return;
       }
 
       const userDataString = await AsyncStorage.getItem(USER_DATA_KEY);
       if (!userDataString) {
-        Alert.alert('Error', 'User data not found. Please login again.');
+        Alert.alert(t.error, t.userDataNotFound);
         setSaving(false);
         return;
       }
@@ -146,14 +160,10 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
         userId = isNaN(parsedId) ? 0 : parsedId;
       }
 
-      // Convert slot numbers to time strings
-      const timeSlots = slotsToTimes(selectedSlots);
-
       const payload = {
         userId,
         date: formatDateForApi(selectedDate),
-        timeSlots,
-        availability: availabilityStatus,
+        slotStatuses,
       };
 
       if (isEditing && availability?.id) {
@@ -168,7 +178,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
             },
           }
         );
-        Alert.alert('Success', 'Availability updated successfully!');
+        Alert.alert(t.success, t.availabilityUpdated);
       } else {
         // Create new
         await axios.post(`${API_BASE_URL}/availabilities/add`, payload, {
@@ -177,7 +187,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        Alert.alert('Success', 'Availability created successfully!');
+        Alert.alert(t.success, t.availabilityCreated);
       }
 
       navigation.goBack();
@@ -187,8 +197,8 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
         e.response?.data?.message ||
         e.response?.data?.error ||
         e.message ||
-        'Failed to save availability. Please try again.';
-      Alert.alert('Error', errorMessage);
+        t.failedToSaveAvailability;
+      Alert.alert(t.error, errorMessage);
     } finally {
       setSaving(false);
     }
@@ -199,7 +209,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
   };
 
   const renderStatusOption = (status: AvailabilityStatus) => {
-    const isSelected = availabilityStatus === status;
+    const isSelected = currentStatus === status;
     const backgroundColor = isSelected ? getStatusColor(status) : colors.lightGrey;
     const textColor = isSelected ? colors.white : colors.textSecondary;
 
@@ -207,17 +217,38 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
       <TouchableOpacity
         key={status}
         style={[styles.statusOption, { backgroundColor }]}
-        onPress={() => {
-          setAvailabilityStatus(status);
-          setShowStatusPicker(false);
-        }}
+        onPress={() => setCurrentStatus(status)}
         activeOpacity={0.7}
       >
         <Text style={[styles.statusOptionText, { color: textColor }]}>
-          {getStatusLabel(status)}
+          {getTranslatedStatusLabel(status)}
         </Text>
       </TouchableOpacity>
     );
+  };
+
+  const handleSlotToggle = (time: string) => {
+    const newSlotStatuses = { ...slotStatuses };
+    if (newSlotStatuses[time] === currentStatus) {
+      // Remove slot if it already has the current status
+      delete newSlotStatuses[time];
+    } else {
+      // Set slot to current status
+      newSlotStatuses[time] = currentStatus;
+    }
+    setSlotStatuses(newSlotStatuses);
+  };
+
+  const handleBatchSlotUpdate = (updates: { [time: string]: AvailabilityStatus | null }) => {
+    const newSlotStatuses = { ...slotStatuses };
+    Object.entries(updates).forEach(([time, status]) => {
+      if (status === null) {
+        delete newSlotStatuses[time];
+      } else {
+        newSlotStatuses[time] = status;
+      }
+    });
+    setSlotStatuses(newSlotStatuses);
   };
 
   return (
@@ -233,16 +264,16 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-              <Text style={styles.backButtonText}>← Back</Text>
+              <Text style={styles.backButtonText}>{t.back}</Text>
             </TouchableOpacity>
             <Text style={styles.title}>
-              {isEditing ? 'Edit Availability' : 'Add Availability'}
+              {isEditing ? t.editAvailability : t.addAvailability}
             </Text>
           </View>
 
           {/* Date Picker Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Date</Text>
+            <Text style={styles.sectionTitle}>{t.date}</Text>
             <TouchableOpacity
               style={styles.dateButton}
               onPress={() => setShowDatePicker(true)}
@@ -265,47 +296,49 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Status Section */}
+          {/* Status Selector Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Status</Text>
+            <Text style={styles.sectionTitle}>{t.statusLabel || 'Status'}</Text>
             <View style={styles.statusOptionsContainer}>
-              {STATUS_OPTIONS.map(renderStatusOption)}
+              {STATUS_OPTIONS.map((status) => renderStatusOption(status))}
             </View>
           </View>
 
           {/* Time Slots Section */}
           <View style={styles.section}>
             <TimeSlotSelector
-              selectedSlots={selectedSlots}
-              onSlotsChange={setSelectedSlots}
+              slotStatuses={slotStatuses}
+              currentStatus={currentStatus}
+              onSlotToggle={handleSlotToggle}
+              onBatchUpdate={handleBatchSlotUpdate}
             />
           </View>
 
           {/* Summary */}
           <View style={styles.summarySection}>
-            <Text style={styles.summaryTitle}>Summary</Text>
+            <Text style={styles.summaryTitle}>{t.summary}</Text>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Date:</Text>
+              <Text style={styles.summaryLabel}>{t.dateLabel}</Text>
               <Text style={styles.summaryValue}>{formatDateForApi(selectedDate)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Status:</Text>
+              <Text style={styles.summaryLabel}>{t.timeSlotsLabel || 'Time Slots'}</Text>
+              <Text style={styles.summaryValue}>
+                {Object.keys(slotStatuses).length} {t.selected || 'selected'}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>{t.statusLabel || 'Current Status'}</Text>
               <View
                 style={[
                   styles.summaryStatusBadge,
-                  { backgroundColor: getStatusColor(availabilityStatus) },
+                  { backgroundColor: getStatusColor(currentStatus) },
                 ]}
               >
                 <Text style={styles.summaryStatusText}>
-                  {getStatusLabel(availabilityStatus)}
+                  {getTranslatedStatusLabel(currentStatus)}
                 </Text>
               </View>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Time Slots:</Text>
-              <Text style={styles.summaryValue}>
-                {selectedSlots.length} selected
-              </Text>
             </View>
           </View>
         </ScrollView>
@@ -317,13 +350,13 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
             onPress={handleCancel}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           <View style={styles.saveButtonContainer}>
             <Button
-              title={saving ? 'Saving...' : 'Save'}
+              title={saving ? t.saving : t.save}
               onPress={handleSave}
-              disabled={saving || selectedSlots.length === 0}
+              disabled={saving || Object.keys(slotStatuses).length === 0}
               loading={saving}
             />
           </View>

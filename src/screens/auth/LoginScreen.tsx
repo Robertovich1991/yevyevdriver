@@ -9,12 +9,10 @@ import { Button } from '../../components/ui/Button';
 import type { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useAuthStore } from '../../store/useAuthStore';
 
+import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-const USER_DATA_KEY = '@user_data';
-const TOKEN_KEY = '@auth_token';
-const API_BASE_URL = 'http://192.168.100.12:8000/api/v1';
-const API_URL = 'http://192.168.100.12:8000';
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

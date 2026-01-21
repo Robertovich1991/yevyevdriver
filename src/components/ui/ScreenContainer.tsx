@@ -1,5 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { SafeAreaView, StyleSheet, type ViewStyle } from 'react-native';
+import { colors } from '../../assets/style/colors';
 
 interface Props {
   children: ReactNode;
@@ -14,7 +15,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: colors.background,
   },
 });
 

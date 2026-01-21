@@ -18,8 +18,8 @@ export const colors = {
   darkGrey: '#333333',
   
   // Background colors
-  background: '#F1F1F1',
-  backgroundLight: '#EBF4F7',
+  background: '#E8F5E9',
+  backgroundLight: '#F1F8E9',
   surface: '#FFFFFF',
   
   // Text colors
@@ -43,7 +43,9 @@ export const colors = {
   // Semantic colors
   cardBackground: '#FFFFFF',
   divider: '#E0E0E0',
-  shadow: 'rgba(0, 0, 0, 0.1)',
+  shadow: 'rgba(56, 170, 53, 0.15)',
+  shadowLight: 'rgba(56, 170, 53, 0.1)',
+  shadowDark: 'rgba(45, 136, 42, 0.2)',
   
   // Transparent
   transparent: 'transparent',
