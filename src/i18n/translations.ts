@@ -4,11 +4,11 @@ export interface CarDetailTranslations {
   // Page titles
   editCar: string;
   addNewCar: string;
-  
+
   // Section titles
   carInformation: string;
   carPhotos: string;
-  
+
   // Labels
   brand: string;
   model: string;
@@ -17,7 +17,7 @@ export interface CarDetailTranslations {
   licensePlate: string;
   carType: string;
   seats: string;
-  
+
   // Placeholders
   brandPlaceholder: string;
   modelPlaceholder: string;
@@ -26,7 +26,7 @@ export interface CarDetailTranslations {
   licensePlatePlaceholder: string;
   carTypePlaceholder: string;
   seatsPlaceholder: string;
-  
+
   // Buttons
   addPhoto: string;
   takePhoto: string;
@@ -39,7 +39,7 @@ export interface CarDetailTranslations {
   delete: string;
   ok: string;
   openSettings: string;
-  
+
   // Messages
   takeFirstPhoto: string;
   uploadingPhoto: string;
@@ -54,7 +54,7 @@ export interface CarDetailTranslations {
   carDeletedSuccess: string;
   removePhotoConfirm: string;
   deleteCarConfirm: string;
-  
+
   // Errors
   error: string;
   authTokenNotFound: string;
@@ -73,7 +73,7 @@ export interface CarDetailTranslations {
   imageUriNotFound: string;
   imageUploadedNoData: string;
   imageUploadedNoUrl: string;
-  
+
   // Permissions
   permissionRequired: string;
   cameraPermissionRequired: string;
@@ -84,7 +84,7 @@ export interface CarDetailTranslations {
   cameraPermissionRequiredSettings: string;
   cameraError: string;
   failedToOpenCamera: string;
-  
+
   // Misc
   limit: string;
   success: string;
@@ -95,11 +95,11 @@ const en: CarDetailTranslations = {
   // Page titles
   editCar: 'Edit Car',
   addNewCar: 'Add New Car',
-  
+
   // Section titles
   carInformation: 'Car Information',
   carPhotos: 'Car Photos',
-  
+
   // Labels
   brand: 'Brand',
   model: 'Model',
@@ -108,7 +108,7 @@ const en: CarDetailTranslations = {
   licensePlate: 'Car Number (License Plate)',
   carType: 'Car Type',
   seats: 'Seats',
-  
+
   // Placeholders
   brandPlaceholder: 'e.g., Toyota',
   modelPlaceholder: 'e.g., Camry',
@@ -117,7 +117,7 @@ const en: CarDetailTranslations = {
   licensePlatePlaceholder: 'e.g., ABC-1234',
   carTypePlaceholder: 'e.g., Sedan, SUV, Hatchback',
   seatsPlaceholder: 'e.g., 4, 5, 6, 7',
-  
+
   // Buttons
   addPhoto: '+ Add Photo',
   takePhoto: 'Take Photo',
@@ -130,7 +130,7 @@ const en: CarDetailTranslations = {
   delete: 'Delete',
   ok: 'OK',
   openSettings: 'Open Settings',
-  
+
   // Messages
   takeFirstPhoto: 'Take your first car photo',
   uploadingPhoto: 'Uploading photo...',
@@ -145,7 +145,7 @@ const en: CarDetailTranslations = {
   carDeletedSuccess: 'Car deleted successfully!',
   removePhotoConfirm: 'Are you sure you want to remove this photo?',
   deleteCarConfirm: 'Are you sure you want to delete this car? This action cannot be undone.',
-  
+
   // Errors
   error: 'Error',
   authTokenNotFound: 'Authentication token not found.',
@@ -164,7 +164,7 @@ const en: CarDetailTranslations = {
   imageUriNotFound: 'Image URI not found.',
   imageUploadedNoData: 'Image uploaded but no data received from server.',
   imageUploadedNoUrl: 'Image uploaded but no URL or path received from server.',
-  
+
   // Permissions
   permissionRequired: 'Permission Required',
   cameraPermissionRequired: 'Camera Permission Required',
@@ -175,7 +175,7 @@ const en: CarDetailTranslations = {
   cameraPermissionRequiredSettings: 'Camera permission is required. Please enable it in your device settings, then try again.',
   cameraError: 'Camera Error',
   failedToOpenCamera: 'Failed to open camera. Please try again.',
-  
+
   // Misc
   limit: 'Limit',
   success: 'Success',
@@ -186,11 +186,11 @@ const hy: CarDetailTranslations = {
   // Page titles
   editCar: '\u053d\u0574\u0562\u0561\u0563\u0580\u0565\u056c \u0574\u0565\u0584\u0565\u0576\u0561\u0576',
   addNewCar: '\u0531\u057e\u0565\u056c\u0561\u0581\u0576\u0565\u056c \u0576\u0578\u0580 \u0574\u0565\u0584\u0565\u0576\u0561',
-  
+
   // Section titles
   carInformation: '\u0544\u0565\u0584\u0565\u0576\u0561\u0575\u056b \u057f\u0565\u0572\u0565\u056f\u0578\u0582\u0569\u0575\u0578\u0582\u0576',
   carPhotos: '\u0544\u0565\u0584\u0565\u0576\u0561\u0575\u056b \u056c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580\u0576\u0565\u0580',
-  
+
   // Labels
   brand: 'Մակնիշ',
   model: 'Մոդել',
@@ -199,7 +199,7 @@ const hy: CarDetailTranslations = {
   licensePlate: 'Համարանիշ',
   carType: 'Թափքային տեսակ',
   seats: 'Նստատեղերի քանակ',
-  
+
   // Placeholders
   brandPlaceholder: '\u0585\u0580. Toyota',
   modelPlaceholder: '\u0585\u0580. Camry',
@@ -208,9 +208,9 @@ const hy: CarDetailTranslations = {
   licensePlatePlaceholder: '\u0585\u0580. ABC-1234',
   carTypePlaceholder: '\u0585\u0580. \u054d\u0565\u0564\u0561\u0576, SUV',
   seatsPlaceholder: '\u0585\u0580. 4, 5, 6, 7',
-  
+
   // Buttons
-  addPhoto: '+ \u0531\u057e\u0565\u056c\u0561\u0581\u0576\u0565\u056c \u056c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580',
+  addPhoto: '+ \u0531\u057e\u0565\u056c\u0561\u0581\u0576\u0565\u056c',
   takePhoto: '\u053c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580\u0565\u056c',
   uploading: '\u0532\u0565\u057c\u0576\u057e\u0578\u0582\u0574 \u0567...',
   updateCar: '\u0539\u0561\u0580\u0574\u0561\u0581\u0576\u0565\u056c \u0574\u0565\u0584\u0565\u0576\u0561\u0576',
@@ -221,7 +221,7 @@ const hy: CarDetailTranslations = {
   delete: '\u054b\u0576\u057b\u0565\u056c',
   ok: '\u053c\u0561\u057e',
   openSettings: '\u0532\u0561\u0581\u0565\u056c \u056f\u0561\u0580\u0563\u0561\u057e\u0578\u0580\u0578\u0582\u0574\u0576\u0565\u0580\u0568',
-  
+
   // Messages
   takeFirstPhoto: '\u053c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580\u0565\u0584 \u0571\u0565\u0580 \u0574\u0565\u0584\u0565\u0576\u0561\u0576',
   uploadingPhoto: '\u053c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580\u0568 \u0562\u0565\u057c\u0576\u057e\u0578\u0582\u0574 \u0567...',
@@ -236,7 +236,7 @@ const hy: CarDetailTranslations = {
   carDeletedSuccess: '\u0544\u0565\u0584\u0565\u0576\u0561\u0576 \u057b\u0576\u057b\u057e\u0565\u0581!',
   removePhotoConfirm: '\u054e\u057d\u057f\u0561\u0570 \u0565\u0584, \u0578\u0580 \u0578\u0582\u0566\u0578\u0582\u0574 \u0565\u0584 \u057b\u0576\u057b\u0565\u056c \u0561\u0575\u057d \u056c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580\u0568?',
   deleteCarConfirm: '\u054e\u057d\u057f\u0561\u0570 \u0565\u0584, \u0578\u0580 \u0578\u0582\u0566\u0578\u0582\u0574 \u0565\u0584 \u057b\u0576\u057b\u0565\u056c \u0561\u0575\u057d \u0574\u0565\u0584\u0565\u0576\u0561\u0576? \u0531\u0575\u057d \u0563\u0578\u0580\u056e\u0578\u0572\u0578\u0582\u0569\u0575\u0578\u0582\u0576\u0568 \u0570\u0576\u0561\u0580\u0561\u057e\u0578\u0580 \u0579\u0567 \u0570\u0565\u057f \u057e\u0565\u0580\u0561\u0581\u0576\u0565\u056c:',
-  
+
   // Errors
   error: '\u054d\u056d\u0561\u056c',
   authTokenNotFound: '\u0546\u0578\u0582\u0575\u0576\u0561\u056f\u0561\u0576\u0561\u0581\u0574\u0561\u0576 \u057f\u0578\u056f\u0565\u0576\u0568 \u0579\u056b \u0563\u057f\u0576\u057e\u0565\u056c:',
@@ -255,7 +255,7 @@ const hy: CarDetailTranslations = {
   imageUriNotFound: '\u0546\u056f\u0561\u0580\u056b URI-\u0576 \u0579\u056b \u0563\u057f\u0576\u057e\u0565\u056c:',
   imageUploadedNoData: '\u0546\u056f\u0561\u0580\u0568 \u0562\u0565\u057c\u0576\u057e\u0565\u056c \u0567, \u0562\u0561\u0575\u0581 \u057f\u057e\u0575\u0561\u056c\u0576\u0565\u0580 \u0579\u0565\u0576 \u057d\u057f\u0561\u0581\u057e\u0565\u056c:',
   imageUploadedNoUrl: '\u0546\u056f\u0561\u0580\u0568 \u0562\u0565\u057c\u0576\u057e\u0565\u056c \u0567, \u0562\u0561\u0575\u0581 URL \u0579\u056b \u057d\u057f\u0561\u0581\u057e\u0565\u056c:',
-  
+
   // Permissions
   permissionRequired: '\u054a\u0561\u0570\u0561\u0576\u057b\u057e\u0578\u0582\u0574 \u0567 \u0569\u0578\u0582\u0575\u056c\u057f\u057e\u0578\u0582\u0569\u0575\u0578\u0582\u0576',
   cameraPermissionRequired: '\u054a\u0561\u0570\u0561\u0576\u057b\u057e\u0578\u0582\u0574 \u0567 \u057f\u0565\u057d\u0561\u056d\u0581\u056b\u056f\u056b \u0569\u0578\u0582\u0575\u056c\u057f\u057e\u0578\u0582\u0569\u0575\u0578\u0582\u0576',
@@ -266,7 +266,7 @@ const hy: CarDetailTranslations = {
   cameraPermissionRequiredSettings: '\u054a\u0561\u0570\u0561\u0576\u057b\u057e\u0578\u0582\u0574 \u0567 \u057f\u0565\u057d\u0561\u056d\u0581\u056b\u056f\u056b \u0569\u0578\u0582\u0575\u056c\u057f\u057e\u0578\u0582\u0569\u0575\u0578\u0582\u0576: \u0544\u056b\u0561\u0581\u0580\u0565\u0584 \u056f\u0561\u0580\u0563\u0561\u057e\u0578\u0580\u0578\u0582\u0574\u0576\u0565\u0580\u0578\u0582\u0574 \u0587 \u0583\u0578\u0580\u0571\u0565\u0584 \u056f\u0580\u056f\u056b\u0576:',
   cameraError: '\u054f\u0565\u057d\u0561\u056d\u0581\u056b\u056f\u056b \u057d\u056d\u0561\u056c',
   failedToOpenCamera: '\u0549\u0570\u0561\u057b\u0578\u0572\u057e\u0565\u0581 \u0562\u0561\u0581\u0565\u056c \u057f\u0565\u057d\u0561\u056d\u0581\u056b\u056f\u0568: \u0553\u0578\u0580\u0571\u0565\u0584 \u056f\u0580\u056f\u056b\u0576:',
-  
+
   // Misc
   limit: '\u054d\u0561\u0570\u0574\u0561\u0576\u0561\u0583\u0561\u056f\u0578\u0582\u0574',
   success: '\u0540\u0561\u057b\u0578\u0572\u0578\u0582\u0569\u0575\u0578\u0582\u0576',
@@ -277,11 +277,11 @@ const ru: CarDetailTranslations = {
   // Page titles
   editCar: '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0430\u0432\u0442\u043e',
   addNewCar: '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u043e\u0432\u043e\u0435 \u0430\u0432\u0442\u043e',
-  
+
   // Section titles
   carInformation: '\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e\u0431 \u0430\u0432\u0442\u043e',
   carPhotos: '\u0424\u043e\u0442\u043e \u0430\u0432\u0442\u043e',
-  
+
   // Labels
   brand: '\u041c\u0430\u0440\u043a\u0430',
   model: '\u041c\u043e\u0434\u0435\u043b\u044c',
@@ -290,7 +290,7 @@ const ru: CarDetailTranslations = {
   licensePlate: '\u041d\u043e\u043c\u0435\u0440 \u0430\u0432\u0442\u043e (\u0433\u043e\u0441. \u043d\u043e\u043c\u0435\u0440)',
   carType: '\u0422\u0438\u043f \u0430\u0432\u0442\u043e',
   seats: '\u041c\u0435\u0441\u0442',
-  
+
   // Placeholders
   brandPlaceholder: '\u043d\u0430\u043f\u0440., Toyota',
   modelPlaceholder: '\u043d\u0430\u043f\u0440., Camry',
@@ -299,7 +299,7 @@ const ru: CarDetailTranslations = {
   licensePlatePlaceholder: '\u043d\u0430\u043f\u0440., ABC-1234',
   carTypePlaceholder: '\u043d\u0430\u043f\u0440., \u0421\u0435\u0434\u0430\u043d, SUV, \u0425\u044d\u0442\u0447\u0431\u0435\u043a',
   seatsPlaceholder: '\u043d\u0430\u043f\u0440., 4, 5, 6, 7',
-  
+
   // Buttons
   addPhoto: '+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0444\u043e\u0442\u043e',
   takePhoto: '\u0421\u0434\u0435\u043b\u0430\u0442\u044c \u0444\u043e\u0442\u043e',
@@ -312,7 +312,7 @@ const ru: CarDetailTranslations = {
   delete: '\u0423\u0434\u0430\u043b\u0438\u0442\u044c',
   ok: '\u041e\u041a',
   openSettings: '\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
-  
+
   // Messages
   takeFirstPhoto: '\u0421\u0434\u0435\u043b\u0430\u0439\u0442\u0435 \u043f\u0435\u0440\u0432\u043e\u0435 \u0444\u043e\u0442\u043e \u0430\u0432\u0442\u043e',
   uploadingPhoto: '\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0444\u043e\u0442\u043e...',
@@ -327,7 +327,7 @@ const ru: CarDetailTranslations = {
   carDeletedSuccess: '\u0410\u0432\u0442\u043e \u0443\u0434\u0430\u043b\u0435\u043d\u043e!',
   removePhotoConfirm: '\u0412\u044b \u0443\u0432\u0435\u0440\u0435\u043d\u044b, \u0447\u0442\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043b\u0438\u0442\u044c \u044d\u0442\u043e \u0444\u043e\u0442\u043e?',
   deleteCarConfirm: '\u0412\u044b \u0443\u0432\u0435\u0440\u0435\u043d\u044b, \u0447\u0442\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043b\u0438\u0442\u044c \u044d\u0442\u043e \u0430\u0432\u0442\u043e? \u042d\u0442\u043e \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043d\u0435\u043b\u044c\u0437\u044f \u043e\u0442\u043c\u0435\u043d\u0438\u0442\u044c.',
-  
+
   // Errors
   error: '\u041e\u0448\u0438\u0431\u043a\u0430',
   authTokenNotFound: '\u0422\u043e\u043a\u0435\u043d \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d.',
@@ -346,7 +346,7 @@ const ru: CarDetailTranslations = {
   imageUriNotFound: 'URI \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d.',
   imageUploadedNoData: '\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043e, \u043d\u043e \u0434\u0430\u043d\u043d\u044b\u0435 \u043d\u0435 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u044b.',
   imageUploadedNoUrl: '\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043e, \u043d\u043e URL \u043d\u0435 \u043f\u043e\u043b\u0443\u0447\u0435\u043d.',
-  
+
   // Permissions
   permissionRequired: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u0435',
   cameraPermissionRequired: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u043a\u0430\u043c\u0435\u0440\u044b',
@@ -357,7 +357,7 @@ const ru: CarDetailTranslations = {
   cameraPermissionRequiredSettings: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u043a\u0430\u043c\u0435\u0440\u044b. \u0412\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445 \u0438 \u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.',
   cameraError: '\u041e\u0448\u0438\u0431\u043a\u0430 \u043a\u0430\u043c\u0435\u0440\u044b',
   failedToOpenCamera: '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043a\u0430\u043c\u0435\u0440\u0443. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.',
-  
+
   // Misc
   limit: '\u041b\u0438\u043c\u0438\u0442',
   success: '\u0423\u0441\u043f\u0435\u0448\u043d\u043e',
@@ -439,46 +439,46 @@ export interface CreateEditAvailabilityTranslations {
   editAvailability: string;
   addAvailability: string;
   back: string;
-  
+
   // Section titles
   date: string;
   status: string;
   summary: string;
-  
+
   // Status labels
   available: string;
   notAvailable: string;
   conditional: string;
-  
+
   // Summary labels
   dateLabel: string;
   statusLabel: string;
   timeSlotsLabel: string;
   selected: string;
-  
+
   // Buttons
   cancel: string;
   save: string;
   saving: string;
-  
+
   // Validation errors
   validationError: string;
   pleaseSelectDate: string;
   pleaseSelectTimeSlot: string;
   cannotSelectPastDates: string;
-  
+
   // Success messages
   success: string;
   availabilityUpdated: string;
   availabilityCreated: string;
-  
+
   // Error messages
   error: string;
   authTokenNotFound: string;
   pleaseLoginAgain: string;
   userDataNotFound: string;
   failedToSaveAvailability: string;
-  
+
   // Time periods
   morning: string;
   afternoon: string;
@@ -486,7 +486,7 @@ export interface CreateEditAvailabilityTranslations {
   morningWithTime: string;
   afternoonWithTime: string;
   eveningWithTime: string;
-  
+
   // Time slot selector
   selectTimeSlots: string;
   slot: string;
@@ -546,7 +546,7 @@ const createEditAvailabilityHy: CreateEditAvailabilityTranslations = {
   summary: 'Ամփոփում',
   available: 'Հասանելի',
   notAvailable: 'Հասանելի չէ',
-  conditional: 'Պայմանական',
+  conditional: 'Եթե պետք է',
   dateLabel: 'Ամսաթիվ:',
   statusLabel: 'Կարգավիճակ:',
   timeSlotsLabel: 'Ժամանակային ժամանակահատվածներ:',
@@ -631,6 +631,226 @@ export const getCreateEditAvailabilityTranslations = (language: Language): Creat
   return createEditAvailabilityTranslations[language] || createEditAvailabilityTranslations.en;
 };
 
+// Availability Template Screens Translations
+export interface AvailabilityTemplateTranslations {
+  // List screen
+  templatesTitle: string;
+  createTemplate: string;
+  updatedOn: string;
+  daysWithSlots: string;
+  apply: string;
+  edit: string;
+  delete: string;
+  emptyTitle: string;
+  emptySubtitle: string;
+
+  // Common actions/messages
+  deleteConfirmBody: string;
+  cancel: string;
+  success: string;
+  error: string;
+  authTokenNotFound: string;
+  deleteSuccess: string;
+  deleteFailed: string;
+
+  // Editor screen
+  back: string;
+  editTemplateTitle: string;
+  createTemplateTitle: string;
+  templateName: string;
+  templateNamePlaceholder: string;
+  weekPattern: string;
+  copyToOtherDays: string;
+  copiedToOtherDays: string;
+  validationNameRequired: string;
+  validationSlotsRequired: string;
+  userDataNotFound: string;
+  updatedTemplate: string;
+  createdTemplate: string;
+  failedToSaveTemplate: string;
+  saveChanges: string;
+  saveTemplate: string;
+  saving: string;
+
+  // Apply screen
+  invalidDateRange: string;
+  applyResultTitle: string;
+  created: string;
+  updated: string;
+  skipped: string;
+  applyFailed: string;
+  applyTemplate: string;
+  dateRange: string;
+  startDate: string;
+  endDate: string;
+  overwrite: string;
+  overwriteHelp: string;
+  applying: string;
+  applyButton: string;
+}
+
+const availabilityTemplateEn: AvailabilityTemplateTranslations = {
+  templatesTitle: 'Availability Templates',
+  createTemplate: 'Create Template',
+  updatedOn: 'Updated on',
+  daysWithSlots: 'Days with slots',
+  apply: 'Apply',
+  edit: 'Edit',
+  delete: 'Delete',
+  emptyTitle: 'No Templates Yet',
+  emptySubtitle: 'Create a template to reuse your weekly schedule.',
+  deleteConfirmBody: 'Are you sure you want to delete this template?',
+  cancel: 'Cancel',
+  success: 'Success',
+  error: 'Error',
+  authTokenNotFound: 'Authentication token not found.',
+  deleteSuccess: 'Template deleted successfully.',
+  deleteFailed: 'Failed to delete template.',
+  back: '← Back',
+  editTemplateTitle: 'Edit Template',
+  createTemplateTitle: 'Create Template',
+  templateName: 'Template name',
+  templateNamePlaceholder: 'e.g., Week A',
+  weekPattern: 'Week pattern',
+  copyToOtherDays: 'Copy to other days',
+  copiedToOtherDays: 'Copied to other days',
+  validationNameRequired: 'Please enter a template name.',
+  validationSlotsRequired: 'Please select at least one time slot.',
+  userDataNotFound: 'User data not found.',
+  updatedTemplate: 'Template updated successfully.',
+  createdTemplate: 'Template created successfully.',
+  failedToSaveTemplate: 'Failed to save template.',
+  saveChanges: 'Save changes',
+  saveTemplate: 'Save template',
+  saving: 'Saving...',
+  invalidDateRange: 'Start date must be before end date.',
+  applyResultTitle: 'Template applied',
+  created: 'Created',
+  updated: 'Updated',
+  skipped: 'Skipped',
+  applyFailed: 'Failed to apply template.',
+  applyTemplate: 'Apply Template',
+  dateRange: 'Date range',
+  startDate: 'Start date',
+  endDate: 'End date',
+  overwrite: 'Overwrite',
+  overwriteHelp: 'Replace existing availability for these dates.',
+  applying: 'Applying...',
+  applyButton: 'Apply',
+};
+
+const availabilityTemplateHy: AvailabilityTemplateTranslations = {
+  templatesTitle: 'Հասանելիության Շաբլոններ',
+  createTemplate: 'Ստեղծել շաբլոն',
+  updatedOn: 'Թարմացվել է',
+  daysWithSlots: 'Օրեր՝ սլոտներով',
+  apply: 'Կիրառել',
+  edit: 'Խմբագրել',
+  delete: 'Ջնջել',
+  emptyTitle: 'Շաբլոններ չկան',
+  emptySubtitle: 'Ստեղծեք շաբլոն՝ շաբաթական գրաֆիկը վերօգտագործելու համար:',
+  deleteConfirmBody: 'Դուք վստահ եք, որ ցանկանում եք ջնջել այս շաբլոնը?',
+  cancel: 'Չեղարկել',
+  success: 'Հաջողություն',
+  error: 'Սխալ',
+  authTokenNotFound: 'Նույնականացման նշանը չի գտնվել:',
+  deleteSuccess: 'Շաբլոնը հաջողությամբ ջնջվեց:',
+  deleteFailed: 'Հնարավոր չէ ջնջել շաբլոնը:',
+  back: '← Վերադառնալ',
+  editTemplateTitle: 'Խմբագրել շաբլոնը',
+  createTemplateTitle: 'Ստեղծել շաբլոն',
+  templateName: 'Շաբլոնի անունը',
+  templateNamePlaceholder: 'օր. Շաբաթ A',
+  weekPattern: 'Շաբաթական ձև',
+  copyToOtherDays: 'Պատճենել մյուս օրերին',
+  copiedToOtherDays: 'Պատճենվեց մյուս օրերին',
+  validationNameRequired: 'Մուտքագրեք շաբլոնի անունը:',
+  validationSlotsRequired: 'Ընտրեք առնվազն մեկ ժամանակահատված:',
+  userDataNotFound: 'Օգտատիրոջ տվյալները չեն գտնվել:',
+  updatedTemplate: 'Շաբլոնը հաջողությամբ թարմացվեց:',
+  createdTemplate: 'Շաբլոնը հաջողությամբ ստեղծվեց:',
+  failedToSaveTemplate: 'Չհաջողվեց պահպանել շաբլոնը:',
+  saveChanges: 'Պահպանել փոփոխությունները',
+  saveTemplate: 'Պահպանել շաբլոնը',
+  saving: 'Պահպանվում է...',
+  invalidDateRange: 'Սկզբի ամսաթիվը պետք է լինի մինչև վերջը:',
+  applyResultTitle: 'Շաբլոնը կիրառվեց',
+  created: 'Ստեղծված',
+  updated: 'Թարմացված',
+  skipped: 'Բաց թողնված',
+  applyFailed: 'Չհաջողվեց կիրառել շաբլոնը:',
+  applyTemplate: 'Կիրառել շաբլոնը',
+  dateRange: 'Ամսաթվի միջակայք',
+  startDate: 'Սկզբի ամսաթիվ',
+  endDate: 'Վերջի ամսաթիվ',
+  overwrite: 'Փոխարինել',
+  overwriteHelp: 'Փոխարինել առկա հասանելիությունը այս օրերի համար:',
+  applying: 'Կիրառվում է...',
+  applyButton: 'Կիրառել',
+};
+
+const availabilityTemplateRu: AvailabilityTemplateTranslations = {
+  templatesTitle: 'Шаблоны доступности',
+  createTemplate: 'Создать шаблон',
+  updatedOn: 'Обновлено',
+  daysWithSlots: 'Дни со слотами',
+  apply: 'Применить',
+  edit: 'Редактировать',
+  delete: 'Удалить',
+  emptyTitle: 'Шаблонов пока нет',
+  emptySubtitle: 'Создайте шаблон, чтобы повторно использовать недельный график.',
+  deleteConfirmBody: 'Вы уверены, что хотите удалить этот шаблон?',
+  cancel: 'Отмена',
+  success: 'Успешно',
+  error: 'Ошибка',
+  authTokenNotFound: 'Токен авторизации не найден.',
+  deleteSuccess: 'Шаблон успешно удален.',
+  deleteFailed: 'Не удалось удалить шаблон.',
+  back: '← Назад',
+  editTemplateTitle: 'Редактировать шаблон',
+  createTemplateTitle: 'Создать шаблон',
+  templateName: 'Название шаблона',
+  templateNamePlaceholder: 'например, Неделя A',
+  weekPattern: 'Недельный шаблон',
+  copyToOtherDays: 'Копировать на другие дни',
+  copiedToOtherDays: 'Скопировано на другие дни',
+  validationNameRequired: 'Введите название шаблона.',
+  validationSlotsRequired: 'Выберите хотя бы один временной слот.',
+  userDataNotFound: 'Данные пользователя не найдены.',
+  updatedTemplate: 'Шаблон успешно обновлен.',
+  createdTemplate: 'Шаблон успешно создан.',
+  failedToSaveTemplate: 'Не удалось сохранить шаблон.',
+  saveChanges: 'Сохранить изменения',
+  saveTemplate: 'Сохранить шаблон',
+  saving: 'Сохранение...',
+  invalidDateRange: 'Дата начала должна быть раньше даты окончания.',
+  applyResultTitle: 'Шаблон применен',
+  created: 'Создано',
+  updated: 'Обновлено',
+  skipped: 'Пропущено',
+  applyFailed: 'Не удалось применить шаблон.',
+  applyTemplate: 'Применить шаблон',
+  dateRange: 'Диапазон дат',
+  startDate: 'Дата начала',
+  endDate: 'Дата окончания',
+  overwrite: 'Перезаписать',
+  overwriteHelp: 'Заменить существующую доступность на эти даты.',
+  applying: 'Применение...',
+  applyButton: 'Применить',
+};
+
+export const availabilityTemplateTranslations: Record<Language, AvailabilityTemplateTranslations> = {
+  en: availabilityTemplateEn,
+  hy: availabilityTemplateHy,
+  ru: availabilityTemplateRu,
+};
+
+export const getAvailabilityTemplateTranslations = (
+  language: Language
+): AvailabilityTemplateTranslations => {
+  return availabilityTemplateTranslations[language] || availabilityTemplateTranslations.en;
+};
+
 // Tab Navigator Translations
 export interface TabNavigatorTranslations {
   profile: string;
@@ -674,31 +894,34 @@ export const getTabNavigatorTranslations = (language: Language): TabNavigatorTra
 export interface AvailabilityListTranslations {
   // Page title
   myAvailability: string;
-  
+
+  // Templates CTA
+  templates: string;
+
   // Filters
   filters: string;
   hideFilters: string;
   filterByDate: string;
   selectDate: string;
   clear: string;
-  
+
   // Time slots
   timeSlot: string;
   timeSlots: string;
-  
+
   // Actions
   tapToEdit: string;
-  
+
   // Empty state
   noAvailabilityRecords: string;
   tapToAddAvailability: string;
-  
+
   // Delete confirmation
   deleteAvailability: string;
   deleteAvailabilityConfirm: string;
   cancel: string;
   delete: string;
-  
+
   // Messages
   success: string;
   error: string;
@@ -709,6 +932,7 @@ export interface AvailabilityListTranslations {
 
 const availabilityListEn: AvailabilityListTranslations = {
   myAvailability: 'My Availability',
+  templates: 'Templates',
   filters: 'Filters',
   hideFilters: 'Hide Filters',
   filterByDate: 'Filter by Date:',
@@ -716,7 +940,7 @@ const availabilityListEn: AvailabilityListTranslations = {
   clear: 'Clear',
   timeSlot: 'time slot',
   timeSlots: 'time slots',
-  tapToEdit: 'Tap to edit →',
+  tapToEdit: 'Tap to edit',
   noAvailabilityRecords: 'No Availability Records',
   tapToAddAvailability: 'Tap the button below to add your availability',
   deleteAvailability: 'Delete Availability',
@@ -732,6 +956,7 @@ const availabilityListEn: AvailabilityListTranslations = {
 
 const availabilityListHy: AvailabilityListTranslations = {
   myAvailability: 'Իմ Հասանելիությունը',
+  templates: 'Շաբլոններ',
   filters: 'Ֆիլտրել',
   hideFilters: 'Թաքցնել ֆիլտրերը',
   filterByDate: 'Զտել ըստ Ամսաթվի:',
@@ -739,7 +964,7 @@ const availabilityListHy: AvailabilityListTranslations = {
   clear: 'Մաքրել',
   timeSlot: 'ժամանակահատված',
   timeSlots: 'ժամանակահատվածներ',
-  tapToEdit: 'Սեղմել փոփոխելու համար →',
+  tapToEdit: 'Սեղմել փոփոխելու համար',
   noAvailabilityRecords: 'Հասանելիության Գրառումներ Չկան',
   tapToAddAvailability: 'Սեղմեք ստորև գտնվող կոճակը ձեր հասանելիությունը ավելացնելու համար',
   deleteAvailability: 'ՋնՋել Հասանելիությունը',
@@ -755,6 +980,7 @@ const availabilityListHy: AvailabilityListTranslations = {
 
 const availabilityListRu: AvailabilityListTranslations = {
   myAvailability: 'Моя Доступность',
+  templates: 'Шаблоны',
   filters: 'Фильтры',
   hideFilters: 'Скрыть Фильтры',
   filterByDate: 'Фильтр по Дате:',
@@ -762,7 +988,7 @@ const availabilityListRu: AvailabilityListTranslations = {
   clear: 'Очистить',
   timeSlot: 'временной слот',
   timeSlots: 'временных слотов',
-  tapToEdit: 'Нажмите для редактирования →',
+  tapToEdit: 'Нажмите для редактирования',
   noAvailabilityRecords: 'Нет Записей Доступности',
   tapToAddAvailability: 'Нажмите кнопку ниже, чтобы добавить вашу доступность',
   deleteAvailability: 'Удалить Доступность',

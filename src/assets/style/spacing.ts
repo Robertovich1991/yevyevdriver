@@ -9,7 +9,7 @@ export const spacing = {
   lg: 24,
   xl: 32,
   xxl: 48,
-  
+
   // Common spacing values
   padding: {
     xs: 4,
@@ -18,7 +18,7 @@ export const spacing = {
     lg: 24,
     xl: 32,
   },
-  
+
   margin: {
     xs: 4,
     sm: 8,
@@ -26,16 +26,16 @@ export const spacing = {
     lg: 24,
     xl: 32,
   },
-  
+
   // Border radius
   borderRadius: {
-    sm: 4,
-    md: 8,
-    lg: 12,
-    xl: 16,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
     round: 9999,
   },
-  
+
   // Icon sizes
   icon: {
     xs: 16,

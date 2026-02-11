@@ -5,6 +5,9 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { colors } from '../../assets/style/colors';
+import { spacing } from '../../assets/style/spacing';
+import { typography } from '../../assets/style/typography';
 
 interface Props {
   title: string;
@@ -34,20 +37,28 @@ export const Button: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 12,
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    minHeight: 48,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: spacing.borderRadius.lg,
     alignItems: 'center',
-    marginVertical: 8,
+    justifyContent: 'center',
+    marginVertical: spacing.sm,
+    shadowColor: colors.shadowDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: colors.mediumGrey,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   text: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 16,
+    color: colors.white,
+    fontWeight: typography.fontWeight.semibold,
+    fontSize: typography.fontSize.md,
   },
 });
-
-

@@ -6,6 +6,9 @@ import {
   StyleSheet,
   type TextInputProps,
 } from 'react-native';
+import { colors } from '../../assets/style/colors';
+import { spacing } from '../../assets/style/spacing';
+import { typography } from '../../assets/style/typography';
 
 interface Props extends TextInputProps {
   label: string;
@@ -16,23 +19,29 @@ export const TextInputField: React.FC<Props> = ({ label, ...rest }) => (
     <Text style={styles.label}>{label}</Text>
     <TextInput
       style={styles.input}
-      placeholderTextColor="#999"
+      placeholderTextColor={colors.textLight}
       {...rest}
     />
   </View>
 );
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 12 },
-  label: { fontSize: 14, fontWeight: '500', marginBottom: 4, color: '#333' },
+  wrapper: { marginBottom: spacing.md },
+  label: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    marginBottom: spacing.xs,
+    color: colors.textSecondary,
+  },
   input: {
-    backgroundColor: '#FFF',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
+    backgroundColor: colors.white,
+    minHeight: 48,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: spacing.borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: colors.border,
+    fontSize: typography.fontSize.md,
+    color: colors.textPrimary,
   },
 });
-
-

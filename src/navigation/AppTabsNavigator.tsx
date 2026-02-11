@@ -19,7 +19,7 @@ export type AppTabsParamList = {
 const Tab = createBottomTabNavigator<AppTabsParamList>();
 
 export const AppTabsNavigator: React.FC = () => {
-  const language = useLanguageStore((s) => s.language);
+  const language = useLanguageStore(s => s.language);
   const t = useMemo(() => getTabNavigatorTranslations(language), [language]);
 
   // @ts-ignore - React Navigation type definition issue with id property
@@ -29,6 +29,18 @@ export const AppTabsNavigator: React.FC = () => {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          height: 64,
+          paddingBottom: 10,
+          paddingTop: 8,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          backgroundColor: colors.white,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
       }}
     >
       <Tab.Screen
@@ -37,7 +49,7 @@ export const AppTabsNavigator: React.FC = () => {
         options={{
           tabBarLabel: t.profile,
           tabBarIcon: ({ color }) => (
-            <Icon name="profile" size={24} color={color} />
+            <Icon name="profile" size={22} color={color} />
           ),
         }}
       />
@@ -47,9 +59,17 @@ export const AppTabsNavigator: React.FC = () => {
         options={{
           tabBarLabel: t.availability,
           tabBarIcon: ({ color }) => (
-            <Icon name="calendar" size={18} color={color} />
+            <Icon name="calendar" size={22} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: event => {
+            event.preventDefault();
+            navigation.navigate('Availability', {
+              screen: 'AvailabilityList',
+            });
+          },
+        })}
       />
       <Tab.Screen
         name="Orders"
@@ -57,7 +77,7 @@ export const AppTabsNavigator: React.FC = () => {
         options={{
           tabBarLabel: t.orders,
           tabBarIcon: ({ color }) => (
-            <Icon name="orders" size={24} color={color} />
+            <Icon name="orders" size={22} color={color} />
           ),
         }}
       />
@@ -67,12 +87,10 @@ export const AppTabsNavigator: React.FC = () => {
         options={{
           tabBarLabel: t.settings,
           tabBarIcon: ({ color }) => (
-            <Icon name="settings" size={20} color={color} />
+            <Icon name="settings" size={22} color={color} />
           ),
         }}
       />
     </Tab.Navigator>
   );
 };
-
-

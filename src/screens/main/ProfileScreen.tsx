@@ -1,15 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Platform, PermissionsAndroid, Linking, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import {
+  Text,
+  View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  PermissionsAndroid,
+  Linking,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { launchCamera, CameraOptions, type Asset } from 'react-native-image-picker';
+import {
+  launchCamera,
+  CameraOptions,
+  type Asset,
+} from 'react-native-image-picker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { useDriverStore } from '../../store/useDriverStore';
 import type { ProfileStackParamList } from '../../navigation/ProfileStackNavigator';
 import { theme } from '../../assets/style/theme';
 import { Icon } from '../../assets/icons/Icon';
-import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import {
+  API_BASE_URL,
+  API_URL,
+  TOKEN_KEY,
+  USER_DATA_KEY,
+} from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
 import { Button } from '../../components/ui/Button';
 interface UserData {
@@ -42,7 +64,7 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'Profile'>;
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { showAlert } = useAlert();
-  const profile = useDriverStore((s) => s.profile);
+  const profile = useDriverStore(s => s.profile);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,24 +110,30 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
         const apiResponse = response.data?.data || response.data;
         console.log('API User Data:', JSON.stringify(apiResponse, null, 2));
-        
+
         // Handle different response structures
         const apiUserData = apiResponse?.user || apiResponse;
-        
+
         if (apiUserData) {
           console.log('API Avatar value:', apiUserData.avatar);
           const updatedUserData: UserData = {
             name: apiUserData.name || '',
             surname: apiUserData.surname || '',
             email: apiUserData.email || '',
-            userId: apiUserData.id?.toString() || apiUserData.userId?.toString() || '',
+            userId:
+              apiUserData.id?.toString() ||
+              apiUserData.userId?.toString() ||
+              '',
             avatar: apiUserData.avatar || undefined,
           };
-          
+
           console.log('Updated UserData avatar:', updatedUserData.avatar);
           setUserData(updatedUserData);
           // Also update AsyncStorage
-          await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
+          await AsyncStorage.setItem(
+            USER_DATA_KEY,
+            JSON.stringify(updatedUserData),
+          );
         }
       } catch (apiError) {
         console.error('Error fetching user data from API:', apiError);
@@ -138,9 +166,14 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       // Handle different response structures
       const apiResponse = response.data?.data || response.data;
       const userData = apiResponse?.user || apiResponse;
-      
+
       // Extract user ID from response
-      const userId = userData?.id || apiResponse?.id || response.data?.id || response.data?.data?.id || response.data?.user?.id;
+      const userId =
+        userData?.id ||
+        apiResponse?.id ||
+        response.data?.id ||
+        response.data?.data?.id ||
+        response.data?.user?.id;
       return userId ? parseInt(userId.toString()) : null;
     } catch (e: any) {
       console.error('Error getting current user ID:', e);
@@ -200,7 +233,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-
   const requestCameraPermission = async (): Promise<boolean> => {
     if (Platform.OS !== 'android') {
       // iOS permissions are handled automatically by the library
@@ -209,7 +241,9 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       // Check if permission is already granted
-      const checkResult = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+      const checkResult = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+      );
       if (checkResult) {
         return true;
       }
@@ -219,11 +253,12 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         PermissionsAndroid.PERMISSIONS.CAMERA,
         {
           title: 'Camera Permission Required',
-          message: 'This app needs access to your camera to take photos for your profile and car pictures.',
+          message:
+            'This app needs access to your camera to take photos for your profile and car pictures.',
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
-        }
+        },
       );
 
       return result === PermissionsAndroid.RESULTS.GRANTED;
@@ -242,13 +277,13 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           'Camera permission is required to take photos. Please enable it in your device settings.',
           'Permission Required',
           [{ text: 'OK' }],
-          'warning'
+          'warning',
         );
         return null;
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const options: CameraOptions = {
         mediaType: 'photo',
         quality: 0.8,
@@ -257,7 +292,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         presentationStyle: 'fullScreen',
       };
 
-      launchCamera(options, (response) => {
+      launchCamera(options, response => {
         console.log(response, 'ppppppppppppppppppp');
 
         if (response.didCancel) {
@@ -266,17 +301,27 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         }
 
         if (response.errorCode || response.errorMessage) {
-          console.error('Camera error:', response.errorCode, response.errorMessage);
-          
+          console.error(
+            'Camera error:',
+            response.errorCode,
+            response.errorMessage,
+          );
+
           // Handle the "permission in manifest" error specifically
-          if (response.errorCode === 'others' && 
-              (response.errorMessage?.includes('Manifest.permission.CAMERA') || 
-               response.errorMessage?.includes('permission'))) {
+          if (
+            response.errorCode === 'others' &&
+            (response.errorMessage?.includes('Manifest.permission.CAMERA') ||
+              response.errorMessage?.includes('permission'))
+          ) {
             showAlert(
               'Camera permission is required. Please enable it in your device settings, then try again.',
               'Camera Permission Required',
               [
-                { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                  onPress: () => resolve(null),
+                },
                 {
                   text: 'Open Settings',
                   onPress: () => {
@@ -285,18 +330,19 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                   },
                 },
               ],
-              'warning'
+              'warning',
             );
             return;
           }
-          
+
           // Handle other errors
           let errorMessage = 'Failed to open camera. Please try again.';
-          
+
           if (response.errorCode === 'camera_unavailable') {
             errorMessage = 'Camera is not available on this device.';
           } else if (response.errorCode === 'permission') {
-            errorMessage = 'Camera permission was denied. Please enable it in your device settings.';
+            errorMessage =
+              'Camera permission was denied. Please enable it in your device settings.';
             showAlert(
               errorMessage,
               'Permission Denied',
@@ -307,14 +353,14 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                   onPress: () => Linking.openSettings(),
                 },
               ],
-              'error'
+              'error',
             );
             resolve(null);
             return;
           } else if (response.errorMessage) {
             errorMessage = response.errorMessage;
           }
-          
+
           showAlert(errorMessage, 'Camera Error', undefined, 'error');
           resolve(null);
           return;
@@ -330,12 +376,18 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-
-  const uploadAvatarImage = async (imageAsset: Asset): Promise<string | null> => {
+  const uploadAvatarImage = async (
+    imageAsset: Asset,
+  ): Promise<string | null> => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Authentication token not found. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
@@ -349,7 +401,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       const formData = new FormData();
       formData.append('file', {
-        uri: Platform.OS === 'android' ? imageAsset.uri : imageAsset.uri.replace('file://', ''),
+        uri:
+          Platform.OS === 'android'
+            ? imageAsset.uri
+            : imageAsset.uri.replace('file://', ''),
         type: fileType,
         name: fileName,
       } as any);
@@ -367,29 +422,42 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       if (!uploadResponse) {
         console.error('No upload response data:', response.data);
-        showAlert('Image uploaded but no data received.', 'Error', undefined, 'error');
+        showAlert(
+          'Image uploaded but no data received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
       // Extract path and url similar to car photos (prioritize path)
       const avatarPath = uploadResponse.path || '';
       const avatarUrl = uploadResponse.url || uploadResponse.path || '';
-      
+
       console.log('Upload response path:', avatarPath);
       console.log('Upload response url:', uploadResponse.url);
       console.log('Upload response filename:', uploadResponse.filename);
-      
+
       // Use path if available (like car photos), otherwise use url
       let finalAvatarUrl = avatarPath || avatarUrl;
-      
+
       if (!finalAvatarUrl) {
         console.error('No URL/path in upload response:', uploadResponse);
-        showAlert('Image uploaded but no URL received.', 'Error', undefined, 'error');
+        showAlert(
+          'Image uploaded but no URL received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
       // If the URL is relative, ensure it doesn't start with a slash
-      if (!finalAvatarUrl.startsWith('http://') && !finalAvatarUrl.startsWith('https://')) {
+      if (
+        !finalAvatarUrl.startsWith('http://') &&
+        !finalAvatarUrl.startsWith('https://')
+      ) {
         finalAvatarUrl = finalAvatarUrl.replace(/^\//, '');
       }
 
@@ -433,19 +501,28 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       setSavingAvatar(true);
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Authentication token not found. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         return;
       }
 
       // Get current user ID using the helper function
       let userId = await getCurrentUserId();
-      
+
       // If getCurrentUserId fails, try to use userId from userData as fallback
       if (!userId && userData.userId) {
-        console.log('getCurrentUserId returned null, trying userData.userId:', userData.userId);
-        const parsedId = typeof userData.userId === 'string' 
-          ? parseInt(userData.userId) 
-          : parseInt(String(userData.userId));
+        console.log(
+          'getCurrentUserId returned null, trying userData.userId:',
+          userData.userId,
+        );
+        const parsedId =
+          typeof userData.userId === 'string'
+            ? parseInt(userData.userId)
+            : parseInt(String(userData.userId));
         if (!isNaN(parsedId) && parsedId > 0) {
           userId = parsedId;
           console.log('Using userId from userData:', userId);
@@ -453,10 +530,12 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       }
 
       if (!userId) {
-        console.error('Could not get userId. API response structure might be different.');
+        console.error(
+          'Could not get userId. API response structure might be different.',
+        );
         console.log('userData:', userData);
         console.log('Attempting to fetch /auth/me directly...');
-        
+
         // Try one more time with direct API call and better logging
         try {
           const meResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
@@ -464,12 +543,23 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               Authorization: `Bearer ${token}`,
             },
           });
-          console.log('Direct /auth/me response:', JSON.stringify(meResponse.data, null, 2));
+          console.log(
+            'Direct /auth/me response:',
+            JSON.stringify(meResponse.data, null, 2),
+          );
           const apiResponse = meResponse.data?.data || meResponse.data;
           const userData = apiResponse?.user || apiResponse;
-          const directUserId = userData?.id || apiResponse?.id || meResponse.data?.id || meResponse.data?.data?.id || meResponse.data?.user?.id;
+          const directUserId =
+            userData?.id ||
+            apiResponse?.id ||
+            meResponse.data?.id ||
+            meResponse.data?.data?.id ||
+            meResponse.data?.user?.id;
           if (directUserId) {
-            userId = typeof directUserId === 'number' ? directUserId : parseInt(directUserId.toString());
+            userId =
+              typeof directUserId === 'number'
+                ? directUserId
+                : parseInt(directUserId.toString());
             console.log('Found userId from direct call:', userId);
           }
         } catch (directError) {
@@ -478,13 +568,18 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       }
 
       if (!userId) {
-        showAlert('Could not retrieve user ID. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Could not retrieve user ID. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         return;
       }
 
       console.log('Saving avatar with URL:', tempAvatarUri);
       console.log('Using userId:', userId);
-      
+
       // Update user profile with avatar URL
       const updateResponse = await axios.put(
         `${API_BASE_URL}/users/update/${userId}`,
@@ -494,7 +589,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       console.log('Update response:', updateResponse.data);
 
@@ -512,12 +607,18 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             name: updatedApiUserData.name || userData.name,
             surname: updatedApiUserData.surname || userData.surname,
             email: updatedApiUserData.email || userData.email,
-            userId: updatedApiUserData.id?.toString() || updatedApiUserData.userId?.toString() || userData.userId,
+            userId:
+              updatedApiUserData.id?.toString() ||
+              updatedApiUserData.userId?.toString() ||
+              userData.userId,
             avatar: updatedApiUserData.avatar || tempAvatarUri,
           };
           console.log('Reloaded avatar from API:', updatedUserData.avatar);
           setUserData(updatedUserData);
-          await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
+          await AsyncStorage.setItem(
+            USER_DATA_KEY,
+            JSON.stringify(updatedUserData),
+          );
         }
       } catch (reloadError) {
         console.error('Error reloading user data:', reloadError);
@@ -525,10 +626,15 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         const updatedData = { ...userData, avatar: tempAvatarUri };
         await saveUserData(updatedData);
       }
-      
+
       setTempAvatarUri(null);
 
-      showAlert('Avatar updated successfully!', 'Success', undefined, 'success');
+      showAlert(
+        'Avatar updated successfully!',
+        'Success',
+        undefined,
+        'success',
+      );
     } catch (e: any) {
       console.error('Save avatar error:', e);
       console.error('Error response:', e.response?.data);
@@ -555,16 +661,32 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('CarDetail', {});
   };
 
+  const normalizeName = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const rawName = userData?.name || profile?.name || '';
+  const rawSurname = userData?.surname || profile?.surname || '';
 
-  // Use registration data if available, otherwise fall back to profile
-  const firstName = userData?.name || (profile?.name ? profile.name.split(' ')[0] : '');
-  const lastName = userData?.surname || (profile?.surname || (profile?.name ? profile.name.split(' ').slice(1).join(' ') : ''));
+  let firstName = normalizeName(rawName);
+  let lastName = normalizeName(rawSurname);
 
-  // Get initials for avatar placeholder
+  if (!lastName && firstName.includes(' ')) {
+    const parts = firstName.split(' ');
+    firstName = parts[0] || '';
+    lastName = parts.slice(1).join(' ');
+  }
+
+  const endsWithSurname =
+    lastName &&
+    firstName &&
+    normalizeName(firstName).toLowerCase().endsWith(lastName.toLowerCase());
+  const displayName = normalizeName(
+    endsWithSurname
+      ? firstName
+      : [firstName, lastName].filter(Boolean).join(' '),
+  );
+
   const getInitials = () => {
-    const first = firstName.charAt(0).toUpperCase();
-    const last = lastName.charAt(0).toUpperCase();
-    return first + (last || '');
+    const parts = displayName.split(' ').filter(Boolean).slice(0, 2);
+    return parts.map(part => part.charAt(0).toUpperCase()).join('');
   };
 
   if (loading) {
@@ -590,37 +712,44 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.avatarContainer}>
           <View style={styles.avatarWrapper}>
             {tempAvatarUri || userData?.avatar ? (
-              <Image 
-                source={{ 
+              <Image
+                source={{
                   uri: (() => {
-                  
-                    
                     const avatarUri = tempAvatarUri || userData?.avatar || '';
                     console.log('Avatar URI from state/storage:', avatarUri);
                     if (!avatarUri) return '';
-                    
+
                     // If it's already a full URL, use it directly
-                    if (avatarUri.startsWith('http://') || avatarUri.startsWith('https://')) {
+                    if (
+                      avatarUri.startsWith('http://') ||
+                      avatarUri.startsWith('https://')
+                    ) {
                       console.log('Using full URL:', avatarUri);
                       return avatarUri;
                     }
-                    
+
                     // Check if it's a storage path (like storage/images/...)
                     if (avatarUri.startsWith('storage/')) {
                       const finalUri = `${API_URL}/${avatarUri}`;
                       console.log('Storage path - Final Avatar URI:', finalUri);
                       return finalUri;
                     }
-                    
+
                     // Otherwise, prepend API_URL for relative paths
-                    const finalUri = `${API_URL}/${avatarUri.replace(/^\//, '')}`;
+                    const finalUri = `${API_URL}/${avatarUri.replace(
+                      /^\//,
+                      '',
+                    )}`;
                     console.log('Relative path - Final Avatar URI:', finalUri);
                     return finalUri;
-                  })()
-                }} 
+                  })(),
+                }}
                 style={styles.avatar}
-                onError={(error) => {
-                  console.error('Avatar image load error:', error.nativeEvent.error);
+                onError={error => {
+                  console.error(
+                    'Avatar image load error:',
+                    error.nativeEvent.error,
+                  );
                   console.log('Failed URI:', tempAvatarUri || userData?.avatar);
                 }}
               />
@@ -629,8 +758,8 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.avatarText}>{getInitials()}</Text>
               </View>
             )}
-            <TouchableOpacity 
-              onPress={handleTakeAvatarPhoto} 
+            <TouchableOpacity
+              onPress={handleTakeAvatarPhoto}
               style={styles.editIconButton}
               activeOpacity={0.7}
               disabled={uploadingAvatar || savingAvatar}
@@ -670,9 +799,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.nameSection}>
           <View style={styles.nameRow}>
             <View style={styles.nameContainer}>
-              <Text style={styles.nameText}>
-                {firstName}{lastName ? ` ${lastName}` : ''}
-              </Text>
+              <Text style={styles.nameText}>{displayName}</Text>
               {userData?.email && (
                 <Text style={styles.emailText}>{userData.email}</Text>
               )}
@@ -691,11 +818,14 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.carsHeader}>
             <Text style={styles.sectionTitle}>My Cars</Text>
-            <TouchableOpacity onPress={handleAddCar} style={styles.addCarButton}>
+            <TouchableOpacity
+              onPress={handleAddCar}
+              style={styles.addCarButton}
+            >
               <Text style={styles.addCarText}>+ Add Car</Text>
             </TouchableOpacity>
           </View>
-          
+
           {loading ? (
             <View style={styles.emptyCarsContainer}>
               <Text style={styles.emptyCarsText}>Loading cars...</Text>
@@ -707,14 +837,15 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             >
               <Icon name="logo-circle" size={64} color={theme.colors.primary} />
               <Text style={styles.emptyCarsText}>No cars added yet</Text>
-              <Text style={styles.emptyCarsHint}>Tap to add your first car</Text>
+              <Text style={styles.emptyCarsHint}>
+                Tap to add your first car
+              </Text>
             </TouchableOpacity>
           ) : (
             <FlatList
               data={cars}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={item => item.id.toString()}
               renderItem={({ item }) => (
-                
                 <TouchableOpacity
                   style={styles.carCard}
                   onPress={() => handleCarPress(item)}
@@ -723,16 +854,19 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                   <View style={styles.carCardContent}>
                     {item.photos && item.photos.length > 0 && (
                       <Image
-                        source={{ 
+                        source={{
                           uri: (() => {
                             const photo = item.photos[0];
                             const photoPath = photo?.path || photo?.url || '';
                             if (!photoPath) return '';
-                            if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+                            if (
+                              photoPath.startsWith('http://') ||
+                              photoPath.startsWith('https://')
+                            ) {
                               return photoPath;
                             }
                             return `${API_URL}/${photoPath.replace(/^\//, '')}`;
-                          })()
+                          })(),
                         }}
                         style={styles.carCardImage}
                         resizeMode="cover"
@@ -740,7 +874,11 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                     )}
                     {(!item.photos || item.photos.length === 0) && (
                       <View style={styles.carCardImagePlaceholder}>
-                        <Icon name="logo-circle" size={40} color={theme.colors.primary} />
+                        <Icon
+                          name="logo-circle"
+                          size={40}
+                          color={theme.colors.primary}
+                        />
                       </View>
                     )}
                     <View style={styles.carCardInfo}>
@@ -749,21 +887,32 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                       </Text>
                       <Text style={styles.carCardSubtitle}>
                         {item.licensePlate || 'No license plate'}
-      </Text>
+                      </Text>
                       <View style={styles.carCardDetails}>
                         {item.year && (
                           <Text style={styles.carCardDetail}>{item.year}</Text>
                         )}
                         {item.color && (
-                          <Text style={styles.carCardDetail}> • {item.color}</Text>
+                          <Text style={styles.carCardDetail}>
+                            {' '}
+                            • {item.color}
+                          </Text>
                         )}
                         {item.seats && (
-                          <Text style={styles.carCardDetail}> • {item.seats} seats</Text>
+                          <Text style={styles.carCardDetail}>
+                            {' '}
+                            • {item.seats} seats
+                          </Text>
                         )}
                       </View>
                     </View>
                     <View style={styles.carCardArrow}>
-                      <Icon name="arrow-left" size={24} color={theme.colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
+                      <Icon
+                        name="arrow-left"
+                        size={24}
+                        color={theme.colors.textSecondary}
+                        style={{ transform: [{ rotate: '180deg' }] }}
+                      />
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -775,7 +924,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             />
           )}
         </View>
-
       </ScrollView>
     </ScreenContainer>
   );
@@ -784,7 +932,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: 'center',
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },
   avatarWrapper: {
@@ -792,16 +940,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     borderWidth: 3,
     borderColor: theme.colors.border,
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -809,7 +957,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
   },
   avatarText: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.white,
   },
@@ -818,9 +966,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: theme.colors.primary,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -864,6 +1012,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'center',
+    position: 'relative',
     width: '100%',
     paddingHorizontal: theme.spacing.md,
   },
@@ -876,17 +1025,21 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.semibold,
+    textAlign: 'center',
   },
   emailText: {
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
     fontSize: theme.typography.fontSize.sm,
+    textAlign: 'center',
   },
   editButton: {
+    position: 'absolute',
+    right: theme.spacing.md,
+    top: 0,
     padding: theme.spacing.xs,
     borderRadius: theme.spacing.borderRadius.sm,
     backgroundColor: theme.colors.lightGrey,
-    marginLeft: theme.spacing.sm,
   },
   editSection: {
     marginBottom: 24,

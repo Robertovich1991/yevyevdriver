@@ -18,6 +18,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { Button } from '../../components/ui/Button';
 import { TimeSlotSelector } from '../../components/forms/TimeSlotSelector';
+import { Icon } from '../../assets/icons/Icon';
 import { colors } from '../../assets/style/colors';
 import { typography } from '../../assets/style/typography';
 import { spacing } from '../../assets/style/spacing';
@@ -33,18 +34,28 @@ import { getCreateEditAvailabilityTranslations } from '../../i18n/translations';
 
 import { API_BASE_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 
-type NavigationProp = NativeStackNavigationProp<ScheduleStackParamList, 'CreateEditAvailability'>;
+type NavigationProp = NativeStackNavigationProp<
+  ScheduleStackParamList,
+  'CreateEditAvailability'
+>;
 type RouteProps = RouteProp<ScheduleStackParamList, 'CreateEditAvailability'>;
 
-const STATUS_OPTIONS: AvailabilityStatus[] = ['available', 'not-available', 'conditional'];
+const STATUS_OPTIONS: AvailabilityStatus[] = [
+  'available',
+  'not-available',
+  'conditional',
+];
 
 export const CreateEditAvailabilityScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  
+
   const { availability, isEditing } = route.params || {};
-  const language = useLanguageStore((s) => s.language);
-  const t = useMemo(() => getCreateEditAvailabilityTranslations(language), [language]);
+  const language = useLanguageStore(s => s.language);
+  const t = useMemo(
+    () => getCreateEditAvailabilityTranslations(language),
+    [language],
+  );
 
   // Helper function to translate status labels
   const getTranslatedStatusLabel = (status: AvailabilityStatus): string => {
@@ -62,8 +73,11 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
 
   // Form state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [slotStatuses, setSlotStatuses] = useState<{ [time: string]: AvailabilityStatus }>({});
-  const [currentStatus, setCurrentStatus] = useState<AvailabilityStatus>('available');
+  const [slotStatuses, setSlotStatuses] = useState<{
+    [time: string]: AvailabilityStatus;
+  }>({});
+  const [currentStatus, setCurrentStatus] =
+    useState<AvailabilityStatus>('available');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -76,7 +90,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
         const date = new Date(
           parseInt(dateParts[0]),
           parseInt(dateParts[1]) - 1,
-          parseInt(dateParts[2])
+          parseInt(dateParts[2]),
         );
         setSelectedDate(date);
       }
@@ -87,7 +101,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
       } else if (availability.timeSlots && availability.availability) {
         // Legacy: convert old format to new format
         const legacySlotStatuses: { [time: string]: AvailabilityStatus } = {};
-        availability.timeSlots.forEach((time) => {
+        availability.timeSlots.forEach(time => {
           legacySlotStatuses[time] = availability.availability!;
         });
         setSlotStatuses(legacySlotStatuses);
@@ -117,7 +131,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
       today.setHours(0, 0, 0, 0);
       const selected = new Date(selectedDate);
       selected.setHours(0, 0, 0, 0);
-      
+
       if (selected < today) {
         return { valid: false, error: t.cannotSelectPastDates };
       }
@@ -176,7 +190,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         Alert.alert(t.success, t.availabilityUpdated);
       } else {
@@ -210,7 +224,9 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
 
   const renderStatusOption = (status: AvailabilityStatus) => {
     const isSelected = currentStatus === status;
-    const backgroundColor = isSelected ? getStatusColor(status) : colors.lightGrey;
+    const backgroundColor = isSelected
+      ? getStatusColor(status)
+      : colors.lightGrey;
     const textColor = isSelected ? colors.white : colors.textSecondary;
 
     return (
@@ -239,7 +255,9 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
     setSlotStatuses(newSlotStatuses);
   };
 
-  const handleBatchSlotUpdate = (updates: { [time: string]: AvailabilityStatus | null }) => {
+  const handleBatchSlotUpdate = (updates: {
+    [time: string]: AvailabilityStatus | null;
+  }) => {
     const newSlotStatuses = { ...slotStatuses };
     Object.entries(updates).forEach(([time, status]) => {
       if (status === null) {
@@ -263,12 +281,18 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-              <Text style={styles.backButtonText}>{t.back}</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>
-              {isEditing ? t.editAvailability : t.addAvailability}
-            </Text>
+            <View style={styles.headerRow}>
+              <TouchableOpacity
+                onPress={handleCancel}
+                style={styles.backButton}
+              >
+                <Icon name="back" size={20} color={colors.textPrimary} />
+              </TouchableOpacity>
+              <Text style={styles.title}>
+                {isEditing ? t.editAvailability : t.addAvailability}
+              </Text>
+              <View style={styles.headerSpacer} />
+            </View>
           </View>
 
           {/* Date Picker Section */}
@@ -279,12 +303,17 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
               onPress={() => setShowDatePicker(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.dateButtonIcon}>📅</Text>
+              <Icon
+                name="calendar"
+                size={20}
+                color={colors.textPrimary}
+                style={styles.dateButtonIcon}
+              />
               <Text style={styles.dateButtonText}>
                 {formatDateForApi(selectedDate)}
               </Text>
             </TouchableOpacity>
-            
+
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
@@ -300,7 +329,7 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t.statusLabel || 'Status'}</Text>
             <View style={styles.statusOptionsContainer}>
-              {STATUS_OPTIONS.map((status) => renderStatusOption(status))}
+              {STATUS_OPTIONS.map(status => renderStatusOption(status))}
             </View>
           </View>
 
@@ -319,16 +348,22 @@ export const CreateEditAvailabilityScreen: React.FC = () => {
             <Text style={styles.summaryTitle}>{t.summary}</Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{t.dateLabel}</Text>
-              <Text style={styles.summaryValue}>{formatDateForApi(selectedDate)}</Text>
+              <Text style={styles.summaryValue}>
+                {formatDateForApi(selectedDate)}
+              </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t.timeSlotsLabel || 'Time Slots'}</Text>
+              <Text style={styles.summaryLabel}>
+                {t.timeSlotsLabel || 'Time Slots'}
+              </Text>
               <Text style={styles.summaryValue}>
                 {Object.keys(slotStatuses).length} {t.selected || 'selected'}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t.statusLabel || 'Current Status'}</Text>
+              <Text style={styles.summaryLabel}>
+                {t.statusLabel || 'Current Status'}
+              </Text>
               <View
                 style={[
                   styles.summaryStatusBadge,
@@ -376,18 +411,29 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.lg,
   },
-  backButton: {
-    marginBottom: spacing.sm,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  backButtonText: {
-    fontSize: typography.fontSize.md,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.medium,
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.lightGrey,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: typography.fontSize.xxl,
+    flex: 1,
+    fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 36,
+    height: 36,
   },
   section: {
     marginBottom: spacing.lg,
@@ -402,13 +448,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    padding: spacing.md,
+    minHeight: 38,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: spacing.borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
   dateButtonIcon: {
-    fontSize: 24,
     marginRight: spacing.sm,
   },
   dateButtonText: {
@@ -422,10 +469,12 @@ const styles = StyleSheet.create({
   },
   statusOption: {
     flex: 1,
+    minHeight: 38,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
     borderRadius: spacing.borderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   statusOptionText: {
     fontSize: typography.fontSize.sm,
@@ -481,10 +530,14 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 12,
+    minHeight: 48,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: spacing.borderRadius.md,
     backgroundColor: colors.lightGrey,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: spacing.sm,
   },
   cancelButtonText: {
     fontSize: typography.fontSize.md,

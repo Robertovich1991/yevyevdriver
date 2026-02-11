@@ -5,48 +5,48 @@
 
 export const colors = {
   // Primary colors
-  primary: '#38AA35',
-  primaryDark: '#2D882A',
-  primaryLight: '#4BC548',
-  
+  primary: '#38ab36',
+  primaryDark: '#158A3B',
+  primaryLight: '#4CD17E',
+
   // Neutral colors
   white: '#FFFFFF',
   black: '#000000',
-  grey: '#575757',
-  lightGrey: '#F1F1F1',
-  mediumGrey: '#CCCCCC',
-  darkGrey: '#333333',
-  
+  grey: '#64748B',
+  lightGrey: '#F1F5F9',
+  mediumGrey: '#CBD5E1',
+  darkGrey: '#1F2937',
+
   // Background colors
-  background: '#E8F5E9',
-  backgroundLight: '#F1F8E9',
+  background: '#F7F8FA',
+  backgroundLight: '#FBFCFD',
   surface: '#FFFFFF',
-  
+
   // Text colors
-  textPrimary: '#000000',
-  textSecondary: '#575757',
-  textLight: '#999999',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textLight: '#94A3B8',
   textWhite: '#FFFFFF',
-  
+
   // Border colors
-  border: '#E0E0E0',
-  borderLight: '#F0F0F0',
-  borderDark: '#CCCCCC',
-  borderGreen: '#2D882A',
-  
+  border: '#E2E8F0',
+  borderLight: '#F1F5F9',
+  borderDark: '#CBD5E1',
+  borderGreen: '#158A3B',
+
   // Status colors
-  success: '#38AA35',
-  error: '#FF3B30',
-  warning: '#FF9500',
-  info: '#007AFF',
-  
+  success: '#1BAC4B',
+  error: '#E43B3B',
+  warning: '#F5B400',
+  info: '#1E7BF6',
+
   // Semantic colors
   cardBackground: '#FFFFFF',
   divider: '#E0E0E0',
-  shadow: 'rgba(56, 170, 53, 0.15)',
-  shadowLight: 'rgba(56, 170, 53, 0.1)',
-  shadowDark: 'rgba(45, 136, 42, 0.2)',
-  
+  shadow: 'rgba(15, 23, 42, 0.08)',
+  shadowLight: 'rgba(15, 23, 42, 0.04)',
+  shadowDark: 'rgba(15, 23, 42, 0.12)',
+
   // Transparent
   transparent: 'transparent',
   overlay: 'rgba(0, 0, 0, 0.5)',

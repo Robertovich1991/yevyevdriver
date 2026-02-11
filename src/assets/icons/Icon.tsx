@@ -3,8 +3,34 @@
  */
 
 import React from 'react';
-import { Image, ImageSourcePropType, StyleSheet, ViewStyle } from 'react-native';
+import { Image, ImageSourcePropType, ViewStyle } from 'react-native';
 import { SvgProps } from 'react-native-svg';
+import type { IconProps as PhosphorIconProps } from 'phosphor-react-native';
+import {
+  ArrowLeft,
+  ArrowDown,
+  CaretDown,
+  PencilSimple,
+  Trash,
+  X,
+  Eye,
+  EyeSlash,
+  Phone,
+  List,
+  Star,
+  CheckCircle,
+  XCircle,
+  MinusCircle,
+  ArrowsClockwise,
+  MapPin,
+  Crosshair,
+  Clock,
+  User,
+  Calendar,
+  ClipboardText,
+  Gear,
+  Circle,
+} from 'phosphor-react-native';
 
 // Icon name type
 export type IconName =
@@ -127,6 +153,38 @@ const loadSvgIcon = (name: IconName): React.ComponentType<SvgProps> | null => {
   }
 };
 
+const phosphorIconMap: Partial<
+  Record<IconName, React.ComponentType<PhosphorIconProps>>
+> = {
+  back: ArrowLeft,
+  edit: PencilSimple,
+  delete: Trash,
+  close: X,
+  eye: Eye,
+  'eye-close': EyeSlash,
+  phone: Phone,
+  menu: List,
+  star: Star,
+  ok: CheckCircle,
+  cancel: XCircle,
+  remove: MinusCircle,
+  'white-remove': MinusCircle,
+  change: ArrowsClockwise,
+  dropdown: CaretDown,
+  'arrow-left': ArrowLeft,
+  'arrow-down': ArrowDown,
+  'arrow-down-black': ArrowDown,
+  geolocation: MapPin,
+  gps: Crosshair,
+  'selected-radio': CheckCircle,
+  'deselected-radio': Circle,
+  pending: Clock,
+  profile: User,
+  calendar: Calendar,
+  orders: ClipboardText,
+  settings: Gear,
+};
+
 interface IconProps {
   name: IconName;
   size?: number;
@@ -144,15 +202,27 @@ export const Icon: React.FC<IconProps> = ({
   height,
   style,
 }) => {
+  const iconWidth = width || size;
+  const iconHeight = height || size;
+  const PhosphorIcon = phosphorIconMap[name];
+
+  if (PhosphorIcon) {
+    return (
+      <PhosphorIcon
+        size={Math.max(iconWidth, iconHeight)}
+        color={color}
+        weight="regular"
+        style={style}
+      />
+    );
+  }
+
   const IconComponent = loadSvgIcon(name);
-  
+
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found`);
     return null;
   }
-
-  const iconWidth = width || size;
-  const iconHeight = height || size;
 
   return (
     <IconComponent

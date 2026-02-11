@@ -1,10 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../../assets/style/colors';
 import { typography } from '../../assets/style/typography';
 import { spacing } from '../../assets/style/spacing';
@@ -24,7 +19,9 @@ interface TimeSlotSelectorProps {
   slotStatuses: { [time: string]: AvailabilityStatus };
   currentStatus: AvailabilityStatus;
   onSlotToggle: (time: string) => void;
-  onBatchUpdate?: (updates: { [time: string]: AvailabilityStatus | null }) => void;
+  onBatchUpdate?: (updates: {
+    [time: string]: AvailabilityStatus | null;
+  }) => void;
 }
 
 export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
@@ -33,8 +30,11 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   onSlotToggle,
   onBatchUpdate,
 }) => {
-  const language = useLanguageStore((s) => s.language);
-  const t = useMemo(() => getCreateEditAvailabilityTranslations(language), [language]);
+  const language = useLanguageStore(s => s.language);
+  const t = useMemo(
+    () => getCreateEditAvailabilityTranslations(language),
+    [language],
+  );
 
   // Generate all available time slots
   const allSlots = useMemo(() => {
@@ -51,36 +51,36 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       const time = slotToTime(slot);
       return slotStatuses[time] || null;
     },
-    [slotStatuses]
+    [slotStatuses],
   );
 
   // Check if a period has slots with the current status
   const isPeriodFullySelected = useCallback(
     (period: keyof typeof TIME_PERIODS): boolean => {
       const periodSlots = getPeriodSlots(period);
-      return periodSlots.every((slot) => {
+      return periodSlots.every(slot => {
         const time = slotToTime(slot);
         return slotStatuses[time] === currentStatus;
       });
     },
-    [slotStatuses, currentStatus]
+    [slotStatuses, currentStatus],
   );
 
   // Check if a period is partially selected (has some slots with any status)
   const isPeriodPartiallySelected = useCallback(
     (period: keyof typeof TIME_PERIODS): boolean => {
       const periodSlots = getPeriodSlots(period);
-      const hasSelected = periodSlots.some((slot) => {
+      const hasSelected = periodSlots.some(slot => {
         const time = slotToTime(slot);
         return slotStatuses[time] !== undefined;
       });
-      const hasUnselected = periodSlots.some((slot) => {
+      const hasUnselected = periodSlots.some(slot => {
         const time = slotToTime(slot);
         return slotStatuses[time] === undefined;
       });
       return hasSelected && hasUnselected;
     },
-    [slotStatuses]
+    [slotStatuses],
   );
 
   // Toggle individual slot
@@ -89,14 +89,14 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       const time = slotToTime(slot);
       onSlotToggle(time);
     },
-    [onSlotToggle]
+    [onSlotToggle],
   );
 
   // Toggle period (morning/afternoon/evening) - set all to current status or remove if all have current status
   const togglePeriod = useCallback(
     (period: keyof typeof TIME_PERIODS) => {
       const periodSlots = getPeriodSlots(period);
-      const allHaveCurrentStatus = periodSlots.every((slot) => {
+      const allHaveCurrentStatus = periodSlots.every(slot => {
         const time = slotToTime(slot);
         return slotStatuses[time] === currentStatus;
       });
@@ -104,7 +104,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       if (onBatchUpdate) {
         // Use batch update for better performance
         const updates: { [time: string]: AvailabilityStatus | null } = {};
-        periodSlots.forEach((slot) => {
+        periodSlots.forEach(slot => {
           const time = slotToTime(slot);
           if (allHaveCurrentStatus) {
             // Remove slots with current status
@@ -120,14 +120,14 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       } else {
         // Fallback to individual toggles
         if (allHaveCurrentStatus) {
-          periodSlots.forEach((slot) => {
+          periodSlots.forEach(slot => {
             const time = slotToTime(slot);
             if (slotStatuses[time] === currentStatus) {
               onSlotToggle(time);
             }
           });
         } else {
-          periodSlots.forEach((slot) => {
+          periodSlots.forEach(slot => {
             const time = slotToTime(slot);
             if (slotStatuses[time] !== currentStatus) {
               onSlotToggle(time);
@@ -136,19 +136,19 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         }
       }
     },
-    [slotStatuses, currentStatus, onSlotToggle, onBatchUpdate]
+    [slotStatuses, currentStatus, onSlotToggle, onBatchUpdate],
   );
 
   // Clear all slots
   const clearAll = useCallback(() => {
     if (onBatchUpdate) {
       const updates: { [time: string]: AvailabilityStatus | null } = {};
-      Object.keys(slotStatuses).forEach((time) => {
+      Object.keys(slotStatuses).forEach(time => {
         updates[time] = null;
       });
       onBatchUpdate(updates);
     } else {
-      Object.keys(slotStatuses).forEach((time) => {
+      Object.keys(slotStatuses).forEach(time => {
         onSlotToggle(time);
       });
     }
@@ -158,7 +158,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   const selectAll = useCallback(() => {
     if (onBatchUpdate) {
       const updates: { [time: string]: AvailabilityStatus | null } = {};
-      allSlots.forEach((slot) => {
+      allSlots.forEach(slot => {
         const time = slotToTime(slot);
         if (slotStatuses[time] !== currentStatus) {
           updates[time] = currentStatus;
@@ -166,7 +166,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       });
       onBatchUpdate(updates);
     } else {
-      allSlots.forEach((slot) => {
+      allSlots.forEach(slot => {
         const time = slotToTime(slot);
         if (slotStatuses[time] !== currentStatus) {
           onSlotToggle(time);
@@ -178,7 +178,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   // Render period button
   const renderPeriodButton = (
     period: keyof typeof TIME_PERIODS,
-    label: string
+    label: string,
   ) => {
     const isFullySelected = isPeriodFullySelected(period);
     const isPartiallySelected = isPeriodPartiallySelected(period);
@@ -226,7 +226,9 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     const timeStr = slotToTime(slot);
     const slotStatus = getSlotStatus(slot);
     const isSelected = slotStatus === currentStatus;
-    const backgroundColor = slotStatus ? getStatusColor(slotStatus) : colors.lightGrey;
+    const backgroundColor = slotStatus
+      ? getStatusColor(slotStatus)
+      : colors.lightGrey;
     const textColor = slotStatus ? colors.white : colors.textSecondary;
 
     return (
@@ -295,7 +297,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       <View style={styles.gridContainer}>
         {slotRows.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.slotRow}>
-            {row.map((slot) => renderSlotButton(slot))}
+            {row.map(slot => renderSlotButton(slot))}
           </View>
         ))}
       </View>
@@ -333,6 +335,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
+    minHeight: 48,
+    justifyContent: 'center',
   },
   periodButtonSelected: {
     backgroundColor: colors.primary,
@@ -362,6 +366,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     backgroundColor: colors.primary,
     borderRadius: spacing.borderRadius.sm,
+    minHeight: 38,
+    justifyContent: 'center',
   },
   actionButtonText: {
     fontSize: typography.fontSize.sm,
@@ -390,7 +396,7 @@ const styles = StyleSheet.create({
     borderRadius: spacing.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 36,
+    minHeight: 48,
   },
   slotButtonSelected: {
     backgroundColor: colors.primary,

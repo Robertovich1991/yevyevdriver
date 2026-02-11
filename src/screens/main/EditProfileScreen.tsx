@@ -13,7 +13,11 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import { launchCamera, CameraOptions, type Asset } from 'react-native-image-picker';
+import {
+  launchCamera,
+  CameraOptions,
+  type Asset,
+} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -23,7 +27,12 @@ import { Button } from '../../components/ui/Button';
 import type { ProfileStackParamList } from '../../navigation/ProfileStackNavigator';
 import { theme } from '../../assets/style/theme';
 import { Icon } from '../../assets/icons/Icon';
-import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import {
+  API_BASE_URL,
+  API_URL,
+  TOKEN_KEY,
+  USER_DATA_KEY,
+} from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
 
 interface UserData {
@@ -71,7 +80,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [currentCarId, setCurrentCarId] = useState<number | null>(null);
-  const [drivingLicencePhotos, setDrivingLicencePhotos] = useState<LicencePhoto[]>([]);
+  const [drivingLicencePhotos, setDrivingLicencePhotos] = useState<
+    LicencePhoto[]
+  >([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,8 +104,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           const userData: UserData = JSON.parse(data);
           const nameParts = (userData.name || '').split(' ');
           const firstName = nameParts[0] || '';
-          const lastName = userData.surname || nameParts.slice(1).join(' ') || '';
-          
+          const lastName =
+            userData.surname || nameParts.slice(1).join(' ') || '';
+
           setName(firstName);
           setSurname(lastName);
           setEmail(userData.email || '');
@@ -118,64 +130,84 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
         // Handle different response structures
         const apiResponse = response.data?.data || response.data;
         const apiUserData = apiResponse?.user || apiResponse;
-        
+
         if (apiUserData) {
           const nameParts = (apiUserData.name || '').split(' ');
           const firstName = nameParts[0] || '';
-          const lastName = apiUserData.surname || nameParts.slice(1).join(' ') || '';
-          
+          const lastName =
+            apiUserData.surname || nameParts.slice(1).join(' ') || '';
+
           setName(firstName);
           setSurname(lastName);
           setEmail(apiUserData.email || '');
           setPhone(apiUserData.phone || '');
           setAvatar(apiUserData.avatar || null);
-          
+
           // Set currentCarId from API (convert to number if needed)
           const apiCurrentCarId = apiUserData.currentCarId;
           if (apiCurrentCarId !== undefined && apiCurrentCarId !== null) {
-            const carId = typeof apiCurrentCarId === 'number' 
-              ? apiCurrentCarId 
-              : parseInt(String(apiCurrentCarId));
+            const carId =
+              typeof apiCurrentCarId === 'number'
+                ? apiCurrentCarId
+                : parseInt(String(apiCurrentCarId));
             setCurrentCarId(!isNaN(carId) && carId > 0 ? carId : null);
           } else {
             setCurrentCarId(null);
           }
-          
+
           // Load driving licence photos from API
-          const apiDrivingLicence = apiUserData.drivingLicense || apiUserData.drivingLicencePhotos || [];
+          const apiDrivingLicence =
+            apiUserData.drivingLicense ||
+            apiUserData.drivingLicencePhotos ||
+            [];
           console.log('API drivingLicense:', apiDrivingLicence);
-          if (Array.isArray(apiDrivingLicence) && apiDrivingLicence.length > 0) {
-            const licencePhotos: LicencePhoto[] = apiDrivingLicence.map((item: any) => ({
-              filename: item.filename || '',
-              path: item.path || '',
-              url: item.url || item.path || '',
-            }));
+          if (
+            Array.isArray(apiDrivingLicence) &&
+            apiDrivingLicence.length > 0
+          ) {
+            const licencePhotos: LicencePhoto[] = apiDrivingLicence.map(
+              (item: any) => ({
+                filename: item.filename || '',
+                path: item.path || '',
+                url: item.url || item.path || '',
+              }),
+            );
             console.log('Parsed driving licence photos:', licencePhotos);
             setDrivingLicencePhotos(licencePhotos);
           } else {
             setDrivingLicencePhotos([]);
           }
-          
+
           // Also update AsyncStorage
           const updatedUserData: UserData = {
             name: firstName,
             surname: lastName,
             email: apiUserData.email || '',
-            userId: apiUserData.id?.toString() || apiUserData.userId?.toString() || '',
+            userId:
+              apiUserData.id?.toString() ||
+              apiUserData.userId?.toString() ||
+              '',
             phone: apiUserData.phone || undefined,
             avatar: apiUserData.avatar || undefined,
-            currentCarId: apiCurrentCarId !== undefined && apiCurrentCarId !== null 
-              ? (typeof apiCurrentCarId === 'number' ? apiCurrentCarId : parseInt(String(apiCurrentCarId)))
-              : undefined,
-            drivingLicencePhotos: Array.isArray(apiDrivingLicence) && apiDrivingLicence.length > 0
-              ? apiDrivingLicence.map((item: any) => ({
-                  filename: item.filename || '',
-                  path: item.path || '',
-                  url: item.url || item.path || '',
-                }))
-              : undefined,
+            currentCarId:
+              apiCurrentCarId !== undefined && apiCurrentCarId !== null
+                ? typeof apiCurrentCarId === 'number'
+                  ? apiCurrentCarId
+                  : parseInt(String(apiCurrentCarId))
+                : undefined,
+            drivingLicencePhotos:
+              Array.isArray(apiDrivingLicence) && apiDrivingLicence.length > 0
+                ? apiDrivingLicence.map((item: any) => ({
+                    filename: item.filename || '',
+                    path: item.path || '',
+                    url: item.url || item.path || '',
+                  }))
+                : undefined,
           };
-          await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
+          await AsyncStorage.setItem(
+            USER_DATA_KEY,
+            JSON.stringify(updatedUserData),
+          );
         }
       } catch (apiError) {
         console.error('Error fetching user data from API:', apiError);
@@ -185,8 +217,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           const userData: UserData = JSON.parse(data);
           const nameParts = (userData.name || '').split(' ');
           const firstName = nameParts[0] || '';
-          const lastName = userData.surname || nameParts.slice(1).join(' ') || '';
-          
+          const lastName =
+            userData.surname || nameParts.slice(1).join(' ') || '';
+
           setName(firstName);
           setSurname(lastName);
           setEmail(userData.email || '');
@@ -198,12 +231,17 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (e) {
       console.error('Error loading user data:', e);
-      showAlert('Failed to load user data.', 'Error', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ], 'error');
+      showAlert(
+        'Failed to load user data.',
+        'Error',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ],
+        'error',
+      );
     } finally {
       setLoading(false);
     }
@@ -246,7 +284,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const checkResult = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.CAMERA
+        PermissionsAndroid.PERMISSIONS.CAMERA,
       );
       if (checkResult) {
         return true;
@@ -261,7 +299,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
-        }
+        },
       );
 
       return result === PermissionsAndroid.RESULTS.GRANTED;
@@ -279,13 +317,13 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           'Camera permission is required to take photos. Please enable it in your device settings.',
           'Permission Required',
           [{ text: 'OK' }],
-          'warning'
+          'warning',
         );
         return null;
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const options: CameraOptions = {
         mediaType: 'photo',
         quality: 0.8,
@@ -294,7 +332,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
         presentationStyle: 'fullScreen',
       };
 
-      launchCamera(options, (response) => {
+      launchCamera(options, response => {
         if (response.didCancel) {
           resolve(null);
           return;
@@ -312,14 +350,14 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                   onPress: () => Linking.openSettings(),
                 },
               ],
-              'error'
+              'error',
             );
           } else {
             showAlert(
               response.errorMessage || 'Failed to open camera.',
               'Camera Error',
               undefined,
-              'error'
+              'error',
             );
           }
           resolve(null);
@@ -336,11 +374,18 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-  const uploadAvatarImage = async (imageAsset: Asset): Promise<string | null> => {
+  const uploadAvatarImage = async (
+    imageAsset: Asset,
+  ): Promise<string | null> => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Authentication token not found. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
@@ -354,7 +399,10 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       const formData = new FormData();
       formData.append('file', {
-        uri: Platform.OS === 'android' ? imageAsset.uri : imageAsset.uri.replace('file://', ''),
+        uri:
+          Platform.OS === 'android'
+            ? imageAsset.uri
+            : imageAsset.uri.replace('file://', ''),
         type: fileType,
         name: fileName,
       } as any);
@@ -366,35 +414,54 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
         },
       });
 
-      console.log('EditProfile Upload response:', JSON.stringify(response.data, null, 2));
+      console.log(
+        'EditProfile Upload response:',
+        JSON.stringify(response.data, null, 2),
+      );
       const uploadResponse = response.data?.data || response.data;
       console.log('EditProfile Upload response parsed:', uploadResponse);
 
       if (!uploadResponse) {
         console.error('No upload response data:', response.data);
-        showAlert('Image uploaded but no data received.', 'Error', undefined, 'error');
+        showAlert(
+          'Image uploaded but no data received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
       // Extract path and url similar to car photos (prioritize path)
       const avatarPath = uploadResponse.path || '';
       const avatarUrl = uploadResponse.url || uploadResponse.path || '';
-      
+
       console.log('EditProfile Upload response path:', avatarPath);
       console.log('EditProfile Upload response url:', uploadResponse.url);
-      console.log('EditProfile Upload response filename:', uploadResponse.filename);
-      
+      console.log(
+        'EditProfile Upload response filename:',
+        uploadResponse.filename,
+      );
+
       // Use path if available (like car photos), otherwise use url
       let finalAvatarUrl = avatarPath || avatarUrl;
-      
+
       if (!finalAvatarUrl) {
         console.error('No URL/path in upload response:', uploadResponse);
-        showAlert('Image uploaded but no URL received.', 'Error', undefined, 'error');
+        showAlert(
+          'Image uploaded but no URL received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
       // If the URL is relative, ensure it doesn't start with a slash
-      if (!finalAvatarUrl.startsWith('http://') && !finalAvatarUrl.startsWith('https://')) {
+      if (
+        !finalAvatarUrl.startsWith('http://') &&
+        !finalAvatarUrl.startsWith('https://')
+      ) {
         finalAvatarUrl = finalAvatarUrl.replace(/^\//, '');
       }
 
@@ -429,11 +496,18 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const uploadImage = async (imageAsset: Asset): Promise<LicencePhoto | null> => {
+  const uploadImage = async (
+    imageAsset: Asset,
+  ): Promise<LicencePhoto | null> => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Authentication token not found. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
@@ -447,7 +521,10 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       const formData = new FormData();
       formData.append('file', {
-        uri: Platform.OS === 'android' ? imageAsset.uri : imageAsset.uri.replace('file://', ''),
+        uri:
+          Platform.OS === 'android'
+            ? imageAsset.uri
+            : imageAsset.uri.replace('file://', ''),
         type: fileType,
         name: fileName,
       } as any);
@@ -463,7 +540,12 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       if (!uploadResponse) {
         console.error('Upload response:', response.data);
-        showAlert('Image uploaded but no data received.', 'Error', undefined, 'error');
+        showAlert(
+          'Image uploaded but no data received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
@@ -475,7 +557,12 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       if (!photoObject.url && !photoObject.path) {
         console.error('Upload response:', response.data);
-        showAlert('Image uploaded but no URL received.', 'Error', undefined, 'error');
+        showAlert(
+          'Image uploaded but no URL received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return null;
       }
 
@@ -495,7 +582,12 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
   const handleTakeLicencePhoto = async () => {
     try {
       if (uploadingLicencePhoto) {
-        showAlert('Uploading photo, please wait...', 'Please Wait', undefined, 'info');
+        showAlert(
+          'Uploading photo, please wait...',
+          'Please Wait',
+          undefined,
+          'info',
+        );
         return;
       }
 
@@ -507,7 +599,12 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           const photoInfo = await uploadImage(asset);
           if (photoInfo) {
             setDrivingLicencePhotos([...drivingLicencePhotos, photoInfo]);
-            showAlert('Driving licence photo uploaded successfully!', 'Success', undefined, 'success');
+            showAlert(
+              'Driving licence photo uploaded successfully!',
+              'Success',
+              undefined,
+              'success',
+            );
           } else {
             showAlert('Failed to upload photo.', 'Error', undefined, 'error');
           }
@@ -532,12 +629,14 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           text: 'Remove',
           style: 'destructive',
           onPress: () => {
-            const updatedPhotos = drivingLicencePhotos.filter((_, i) => i !== index);
+            const updatedPhotos = drivingLicencePhotos.filter(
+              (_, i) => i !== index,
+            );
             setDrivingLicencePhotos(updatedPhotos);
           },
         },
       ],
-      'warning'
+      'warning',
     );
   };
 
@@ -557,9 +656,14 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
       // Handle different response structures
       const apiResponse = response.data?.data || response.data;
       const userData = apiResponse?.user || apiResponse;
-      
+
       // Extract user ID from response
-      const userId = userData?.id || apiResponse?.id || response.data?.id || response.data?.data?.id || response.data?.user?.id;
+      const userId =
+        userData?.id ||
+        apiResponse?.id ||
+        response.data?.id ||
+        response.data?.data?.id ||
+        response.data?.user?.id;
       return userId ? parseInt(userId.toString()) : null;
     } catch (e: any) {
       console.error('Error getting current user ID:', e);
@@ -596,7 +700,12 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Authentication token not found. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         setSaving(false);
         return;
       }
@@ -613,7 +722,12 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
       // Get current user ID from /auth/me endpoint
       const userId = await getCurrentUserId();
       if (!userId) {
-        showAlert('Could not retrieve user ID. Please login again.', 'Error', undefined, 'error');
+        showAlert(
+          'Could not retrieve user ID. Please login again.',
+          'Error',
+          undefined,
+          'error',
+        );
         setSaving(false);
         return;
       }
@@ -638,7 +752,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       // Add drivingLicense array if photos exist
       if (drivingLicencePhotos.length > 0) {
-        updatePayload.drivingLicense = drivingLicencePhotos.map((photo) => ({
+        updatePayload.drivingLicense = drivingLicencePhotos.map(photo => ({
           filename: photo.filename,
           url: photo.url,
           path: photo.path,
@@ -655,7 +769,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         // Update local storage
@@ -666,21 +780,30 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           email: email.toLowerCase().trim(),
           phone: phone.trim() || undefined,
           currentCarId: currentCarId || undefined,
-          drivingLicencePhotos: drivingLicencePhotos.length > 0 ? drivingLicencePhotos : undefined,
+          drivingLicencePhotos:
+            drivingLicencePhotos.length > 0 ? drivingLicencePhotos : undefined,
         };
-        
+
         if (avatar) {
           updatedUserData.avatar = avatar;
         }
-        
-        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
 
-        showAlert('Profile updated successfully!', 'Success', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ], 'success');
+        await AsyncStorage.setItem(
+          USER_DATA_KEY,
+          JSON.stringify(updatedUserData),
+        );
+
+        showAlert(
+          'Profile updated successfully!',
+          'Success',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ],
+          'success',
+        );
       } catch (apiError: any) {
         console.error('API update error:', apiError);
         const errorMessage =
@@ -688,7 +811,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           apiError.response?.data?.error ||
           apiError.message ||
           'Failed to update profile. Please try again.';
-        
+
         // Still update local storage as fallback
         const updatedUserData: UserData = {
           ...currentUserData,
@@ -697,21 +820,30 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           email: email.toLowerCase().trim(),
           phone: phone.trim() || undefined,
           currentCarId: currentCarId || undefined,
-          drivingLicencePhotos: drivingLicencePhotos.length > 0 ? drivingLicencePhotos : undefined,
+          drivingLicencePhotos:
+            drivingLicencePhotos.length > 0 ? drivingLicencePhotos : undefined,
         };
-        
+
         if (avatar) {
           updatedUserData.avatar = avatar;
         }
-        
-        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
 
-        showAlert(`${errorMessage}\n\nChanges saved locally.`, 'Warning', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ], 'warning');
+        await AsyncStorage.setItem(
+          USER_DATA_KEY,
+          JSON.stringify(updatedUserData),
+        );
+
+        showAlert(
+          `${errorMessage}\n\nChanges saved locally.`,
+          'Warning',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ],
+          'warning',
+        );
       }
     } catch (e: any) {
       console.error('Save profile error:', e);
@@ -755,7 +887,11 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => navigation.goBack()}
               style={styles.backButton}
             >
-              <Icon name="arrow-left" size={24} color={theme.colors.textPrimary} />
+              <Icon
+                name="arrow-left"
+                size={24}
+                color={theme.colors.textPrimary}
+              />
             </TouchableOpacity>
             <Text style={styles.title}>Edit Profile</Text>
             <View style={styles.placeholder} />
@@ -765,33 +901,48 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.avatarContainer}>
             <View style={styles.avatarWrapper}>
               {avatar ? (
-                <Image 
-                  source={{ 
+                <Image
+                  source={{
                     uri: (() => {
                       if (!avatar) return '';
                       console.log('EditProfile Avatar URI:', avatar);
                       // If it's already a full URL, use it directly
-                      if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+                      if (
+                        avatar.startsWith('http://') ||
+                        avatar.startsWith('https://')
+                      ) {
                         console.log('Using full URL:', avatar);
                         return avatar;
                       }
-                      
+
                       // Check if it's a storage path (like storage/images/...)
                       if (avatar.startsWith('storage/')) {
                         const finalUri = `${API_URL}/${avatar}`;
-                        console.log('Storage path - Final Avatar URI:', finalUri);
+                        console.log(
+                          'Storage path - Final Avatar URI:',
+                          finalUri,
+                        );
                         return finalUri;
                       }
-                      
+
                       // Otherwise, prepend API_URL for relative paths
-                      const finalUri = `${API_URL}/${avatar.replace(/^\//, '')}`;
-                      console.log('Relative path - Final Avatar URI:', finalUri);
+                      const finalUri = `${API_URL}/${avatar.replace(
+                        /^\//,
+                        '',
+                      )}`;
+                      console.log(
+                        'Relative path - Final Avatar URI:',
+                        finalUri,
+                      );
                       return finalUri;
-                    })()
-                  }} 
+                    })(),
+                  }}
                   style={styles.avatar}
-                  onError={(error) => {
-                    console.error('EditProfile Avatar image load error:', error.nativeEvent.error);
+                  onError={error => {
+                    console.error(
+                      'EditProfile Avatar image load error:',
+                      error.nativeEvent.error,
+                    );
                     console.log('Failed URI:', avatar);
                   }}
                 />
@@ -856,7 +1007,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.label}>Current Car</Text>
               {cars.length === 0 ? (
                 <View style={styles.noCarsContainer}>
-                  <Text style={styles.noCarsText}>No cars available. Add a car first.</Text>
+                  <Text style={styles.noCarsText}>
+                    No cars available. Add a car first.
+                  </Text>
                   <TouchableOpacity
                     style={styles.addCarLink}
                     onPress={() => {
@@ -894,7 +1047,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                       None
                     </Text>
                   </TouchableOpacity>
-                  {cars.map((car) => (
+                  {cars.map(car => (
                     <TouchableOpacity
                       key={car.id}
                       style={[
@@ -907,7 +1060,8 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                       <Text
                         style={[
                           styles.carOptionText,
-                          currentCarId === car.id && styles.carOptionTextSelected,
+                          currentCarId === car.id &&
+                            styles.carOptionTextSelected,
                         ]}
                       >
                         {car.make} {car.model}
@@ -916,7 +1070,8 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                         <Text
                           style={[
                             styles.carPlateText,
-                            currentCarId === car.id && styles.carPlateTextSelected,
+                            currentCarId === car.id &&
+                              styles.carPlateTextSelected,
                           ]}
                         >
                           {car.licensePlate}
@@ -926,7 +1081,8 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                         <Text
                           style={[
                             styles.carYearText,
-                            currentCarId === car.id && styles.carYearTextSelected,
+                            currentCarId === car.id &&
+                              styles.carYearTextSelected,
                           ]}
                         >
                           {car.year}
@@ -957,7 +1113,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
               </View>
               {drivingLicencePhotos.length === 0 ? (
                 <View style={styles.emptyPhotosContainer}>
-                  <Text style={styles.emptyPhotosText}>No photos added yet</Text>
+                  <Text style={styles.emptyPhotosText}>
+                    No photos added yet
+                  </Text>
                   <Text style={styles.emptyPhotosHint}>
                     Tap "Add Photo" to add driving licence photos
                   </Text>
@@ -975,25 +1133,38 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                       // If path starts with storage/, use it directly, otherwise prepend API_URL
                       if (item.path.startsWith('storage/')) {
                         imageUri = `${API_URL}/${item.path}`;
-                      } else if (item.path.startsWith('http://') || item.path.startsWith('https://')) {
+                      } else if (
+                        item.path.startsWith('http://') ||
+                        item.path.startsWith('https://')
+                      ) {
                         imageUri = item.path;
                       } else {
                         imageUri = `${API_URL}/${item.path.replace(/^\//, '')}`;
                       }
                     } else if (item.url) {
-                      imageUri = item.url.startsWith('http://') || item.url.startsWith('https://') 
-                        ? item.url 
-                        : `${API_URL}/${item.url.replace(/^\//, '')}`;
+                      imageUri =
+                        item.url.startsWith('http://') ||
+                        item.url.startsWith('https://')
+                          ? item.url
+                          : `${API_URL}/${item.url.replace(/^\//, '')}`;
                     }
-                    console.log('Driving licence photo URI:', imageUri, 'item:', item);
+                    console.log(
+                      'Driving licence photo URI:',
+                      imageUri,
+                      'item:',
+                      item,
+                    );
                     return (
                       <View style={styles.photoContainer}>
                         <Image
                           source={{ uri: imageUri }}
                           style={styles.licencePhoto}
                           resizeMode="cover"
-                          onError={(error) => {
-                            console.error('Driving licence image load error:', error.nativeEvent.error);
+                          onError={error => {
+                            console.error(
+                              'Driving licence image load error:',
+                              error.nativeEvent.error,
+                            );
                             console.log('Failed URI:', imageUri, 'item:', item);
                           }}
                         />
@@ -1002,7 +1173,11 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                           onPress={() => handleRemoveLicencePhoto(index)}
                           activeOpacity={0.7}
                         >
-                          <Icon name="remove" size={16} color={theme.colors.white} />
+                          <Icon
+                            name="remove"
+                            size={16}
+                            color={theme.colors.white}
+                          />
                         </TouchableOpacity>
                       </View>
                     );
@@ -1049,38 +1224,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
   },
   backButton: {
-    padding: theme.spacing.xs,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.lightGrey,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: theme.typography.fontSize.xxl,
+    flex: 1,
+    fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textPrimary,
+    textAlign: 'center',
   },
   placeholder: {
-    width: 40,
+    width: 36,
+    height: 36,
   },
   avatarContainer: {
     alignItems: 'center',
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
+    marginTop: 0,
+    marginBottom: theme.spacing.md,
   },
   avatarWrapper: {
     position: 'relative',
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     borderWidth: 3,
     borderColor: theme.colors.border,
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1088,7 +1271,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
   },
   avatarText: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.white,
   },
@@ -1097,9 +1280,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: theme.colors.primary,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,

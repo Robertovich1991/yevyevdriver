@@ -1,8 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Platform, PermissionsAndroid, Linking } from 'react-native';
+import {
+  Text,
+  View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  PermissionsAndroid,
+  Linking,
+  Alert,
+} from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { launchCamera, CameraOptions, type Asset } from 'react-native-image-picker';
+import {
+  launchCamera,
+  CameraOptions,
+  type Asset,
+} from 'react-native-image-picker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { TextInputField } from '../../components/ui/TextInputField';
@@ -13,7 +28,12 @@ import { Icon } from '../../assets/icons/Icon';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { getCarDetailTranslations } from '../../i18n/translations';
 
-import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import {
+  API_BASE_URL,
+  API_URL,
+  TOKEN_KEY,
+  USER_DATA_KEY,
+} from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'CarDetail'>;
@@ -39,10 +59,10 @@ interface CarData {
 export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { carId, car } = route.params || {};
   const isEditing = !!carId || !!car;
-  const language = useLanguageStore((s) => s.language);
+  const language = useLanguageStore(s => s.language);
   const t = useMemo(() => getCarDetailTranslations(language), [language]);
   const { showAlert } = useAlert();
-  
+
   const [carData, setCarData] = useState<CarData>({
     brand: '',
     model: '',
@@ -69,11 +89,12 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         licensePlate: car.licensePlate || '',
         type: car.type || '',
         seats: car.seats?.toString() || '',
-        photos: car.photos?.map((p: any) => ({
-          filename: p.filename || p.url?.split('/').pop() || 'photo.jpg',
-          url: p.url || p,
-          path: p.path || '',
-        })) || [],
+        photos:
+          car.photos?.map((p: any) => ({
+            filename: p.filename || p.url?.split('/').pop() || 'photo.jpg',
+            url: p.url || p,
+            path: p.path || '',
+          })) || [],
       });
     } else if (carId) {
       // Fetch car data from API
@@ -106,7 +127,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       console.log('Car API response:', response.data);
       // Try multiple possible response structures
       const car = response.data?.data || response.data?.car || response.data;
-      
+
       if (!car || (typeof car === 'object' && Object.keys(car).length === 0)) {
         console.error('No car data in response:', response.data);
         showAlert(t.noCarDataReceived, t.error, undefined, 'error');
@@ -123,13 +144,16 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         licensePlate: car.licensePlate || carData.licensePlate || '',
         type: car.type || carData.type || '',
         seats: car.seats?.toString() || carData.seats || '',
-        photos: car.photos?.map((p: any) => ({
-          filename: p.filename || p.url?.split('/').pop() || 'photo.jpg',
-          url: p.url || p,
-          path: p.path || '',
-        })) || carData.photos || [],
+        photos:
+          car.photos?.map((p: any) => ({
+            filename: p.filename || p.url?.split('/').pop() || 'photo.jpg',
+            url: p.url || p,
+            path: p.path || '',
+          })) ||
+          carData.photos ||
+          [],
       };
-      
+
       console.log('Updated car data to set:', updatedCarData);
       setCarData(updatedCarData);
     } catch (e: any) {
@@ -151,7 +175,9 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
 
     try {
-      const checkResult = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+      const checkResult = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+      );
       if (checkResult) {
         return true;
       }
@@ -164,7 +190,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           buttonNeutral: t.cancel,
           buttonNegative: t.cancel,
           buttonPositive: t.ok,
-        }
+        },
       );
 
       return result === PermissionsAndroid.RESULTS.GRANTED;
@@ -181,12 +207,12 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         t.cameraPermissionRequiredSettings,
         t.permissionRequired,
         [{ text: t.ok }],
-        'warning'
+        'warning',
       );
       return null;
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const options: CameraOptions = {
         mediaType: 'photo',
         quality: 0.8,
@@ -195,16 +221,20 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         presentationStyle: 'fullScreen',
       };
 
-      launchCamera(options, (response) => {
+      launchCamera(options, response => {
         if (response.didCancel) {
           resolve(null);
           return;
         }
 
         if (response.errorCode || response.errorMessage) {
-          console.error('Camera error:', response.errorCode, response.errorMessage);
+          console.error(
+            'Camera error:',
+            response.errorCode,
+            response.errorMessage,
+          );
           let errorMessage = t.failedToOpenCamera;
-          
+
           if (response.errorCode === 'camera_unavailable') {
             errorMessage = t.cameraUnavailable;
           } else if (response.errorCode === 'permission') {
@@ -219,18 +249,24 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   onPress: () => Linking.openSettings(),
                 },
               ],
-              'error'
+              'error',
             );
             resolve(null);
             return;
-          } else if (response.errorCode === 'others' && 
-              (response.errorMessage?.includes('Manifest.permission.CAMERA') || 
-               response.errorMessage?.includes('permission'))) {
+          } else if (
+            response.errorCode === 'others' &&
+            (response.errorMessage?.includes('Manifest.permission.CAMERA') ||
+              response.errorMessage?.includes('permission'))
+          ) {
             showAlert(
               t.cameraPermissionRequiredSettings,
               t.cameraPermissionRequired,
               [
-                { text: t.cancel, style: 'cancel', onPress: () => resolve(null) },
+                {
+                  text: t.cancel,
+                  style: 'cancel',
+                  onPress: () => resolve(null),
+                },
                 {
                   text: t.openSettings,
                   onPress: () => {
@@ -239,13 +275,13 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   },
                 },
               ],
-              'warning'
+              'warning',
             );
             return;
           } else if (response.errorMessage) {
             errorMessage = response.errorMessage;
           }
-          
+
           showAlert(errorMessage, t.cameraError, undefined, 'error');
           resolve(null);
           return;
@@ -279,11 +315,14 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       const formData = new FormData();
       formData.append('file', {
-        uri: Platform.OS === 'android' ? imageAsset.uri : imageAsset.uri.replace('file://', ''),
+        uri:
+          Platform.OS === 'android'
+            ? imageAsset.uri
+            : imageAsset.uri.replace('file://', ''),
         type: fileType,
         name: fileName,
       } as any);
-console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
+      console.log(formData, '[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
 
       const response = await axios.post(`${API_BASE_URL}/uploads`, formData, {
         headers: {
@@ -294,7 +333,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
 
       // The API returns an object with filename, path, and url
       const uploadResponse = response.data?.data || response.data;
-      
+
       if (!uploadResponse) {
         console.error('Upload response:', response.data);
         showAlert(t.imageUploadedNoData, t.error, undefined, 'error');
@@ -381,12 +420,14 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
             text: t.remove,
             style: 'destructive',
             onPress: () => {
-              const updatedPhotos = carData.photos.filter((_, i) => i !== index);
+              const updatedPhotos = carData.photos.filter(
+                (_, i) => i !== index,
+              );
               setCarData({ ...carData, photos: updatedPhotos });
             },
           },
         ],
-        'warning'
+        'warning',
       );
       return;
     }
@@ -408,14 +449,21 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               }
 
               const photoObj = photo as CarPhoto;
-              
+
               if (!photoObj.path) {
-                showAlert(t.cannotDeletePhotoMissingPath, t.error, undefined, 'error');
+                showAlert(
+                  t.cannotDeletePhotoMissingPath,
+                  t.error,
+                  undefined,
+                  'error',
+                );
                 return;
               }
 
               // Make DELETE request to cars/delete-photo endpoint with carId and path as query parameters
-              const deleteUrl = `${API_BASE_URL}/cars/delete-photo?carId=${carData.id}&path=${encodeURIComponent(photoObj.path)}`;
+              const deleteUrl = `${API_BASE_URL}/cars/delete-photo?carId=${
+                carData.id
+              }&path=${encodeURIComponent(photoObj.path)}`;
               await axios.delete(deleteUrl, {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -428,9 +476,14 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               try {
                 await loadCarData(carData.id);
               } catch (reloadError) {
-                console.error('Failed to reload car after photo deletion:', reloadError);
+                console.error(
+                  'Failed to reload car after photo deletion:',
+                  reloadError,
+                );
                 // If reload fails, at least remove the photo from local state
-                const updatedPhotos = carData.photos.filter((_, i) => i !== index);
+                const updatedPhotos = carData.photos.filter(
+                  (_, i) => i !== index,
+                );
                 setCarData({ ...currentCarData, photos: updatedPhotos });
               }
 
@@ -447,7 +500,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
           },
         },
       ],
-      'warning'
+      'warning',
     );
   };
 
@@ -478,9 +531,10 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       const userData = JSON.parse(userDataString);
       let userId = 0;
       if (userData.userId) {
-        const parsedId = typeof userData.userId === 'string' 
-          ? parseInt(userData.userId) 
-          : userData.userId;
+        const parsedId =
+          typeof userData.userId === 'string'
+            ? parseInt(userData.userId)
+            : userData.userId;
         userId = isNaN(parsedId) ? 0 : parsedId;
       }
 
@@ -493,14 +547,18 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
         licensePlate: carData.licensePlate,
         seats: parseInt(carData.seats) || 4,
         photos: carData.photos
-          .filter((photo) => {
+          .filter(photo => {
             const photoObj = photo as CarPhoto;
             return photoObj && (photoObj.url || photoObj.path);
           })
           .map((photo): { filename: string; path: string; url: string } => {
             const photoObj = photo as CarPhoto;
             return {
-              filename: photoObj.filename || photoObj.url?.split('/').pop() || photoObj.path?.split('/').pop() || 'photo.jpg',
+              filename:
+                photoObj.filename ||
+                photoObj.url?.split('/').pop() ||
+                photoObj.path?.split('/').pop() ||
+                'photo.jpg',
               path: photoObj.path || photoObj.url || '',
               url: photoObj.url || photoObj.path || '',
             };
@@ -509,12 +567,16 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
 
       if (isEditing && carData.id) {
         // Update existing car
-        await axios.put(`${API_BASE_URL}/cars/update/${carData.id}`, carPayload, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+        await axios.put(
+          `${API_BASE_URL}/cars/update/${carData.id}`,
+          carPayload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         showAlert(t.carUpdatedSuccess, t.success, undefined, 'success');
       } else {
         // Add new car
@@ -570,12 +632,17 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 },
               });
 
-              showAlert(t.carDeletedSuccess, t.success, [
-                {
-                  text: t.ok,
-                  onPress: () => navigation.goBack(),
-                },
-              ], 'success');
+              showAlert(
+                t.carDeletedSuccess,
+                t.success,
+                [
+                  {
+                    text: t.ok,
+                    onPress: () => navigation.goBack(),
+                  },
+                ],
+                'success',
+              );
             } catch (e: any) {
               console.error('Delete car error:', e);
               const errorMessage =
@@ -590,7 +657,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
           },
         },
       ],
-      'warning'
+      'warning',
     );
   };
 
@@ -598,56 +665,60 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>{isEditing ? t.editCar : t.addNewCar}</Text>
+          <Text style={styles.title}>
+            {isEditing ? t.editCar : t.addNewCar}
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.carInformation}</Text>
-          
+
           <TextInputField
             label={t.brand}
             placeholder={t.brandPlaceholder}
             value={carData.brand}
-            onChangeText={(text) => setCarData({ ...carData, brand: text })}
+            onChangeText={text => setCarData({ ...carData, brand: text })}
           />
           <TextInputField
             label={t.model}
             placeholder={t.modelPlaceholder}
             value={carData.model}
-            onChangeText={(text) => setCarData({ ...carData, model: text })}
+            onChangeText={text => setCarData({ ...carData, model: text })}
           />
           <TextInputField
             label={t.year}
             placeholder={t.yearPlaceholder}
             keyboardType="number-pad"
             value={carData.year}
-            onChangeText={(text) => setCarData({ ...carData, year: text })}
+            onChangeText={text => setCarData({ ...carData, year: text })}
           />
           <TextInputField
             label={t.color}
             placeholder={t.colorPlaceholder}
             value={carData.color}
-            onChangeText={(text) => setCarData({ ...carData, color: text })}
+            onChangeText={text => setCarData({ ...carData, color: text })}
           />
           <TextInputField
             label={t.licensePlate}
             placeholder={t.licensePlatePlaceholder}
             autoCapitalize="characters"
             value={carData.licensePlate}
-            onChangeText={(text) => setCarData({ ...carData, licensePlate: text })}
+            onChangeText={text =>
+              setCarData({ ...carData, licensePlate: text })
+            }
           />
           <TextInputField
             label={t.carType}
             placeholder={t.carTypePlaceholder}
             value={carData.type}
-            onChangeText={(text) => setCarData({ ...carData, type: text })}
+            onChangeText={text => setCarData({ ...carData, type: text })}
           />
           <TextInputField
             label={t.seats}
             placeholder={t.seatsPlaceholder}
             keyboardType="number-pad"
             value={carData.seats}
-            onChangeText={(text) => setCarData({ ...carData, seats: text })}
+            onChangeText={text => setCarData({ ...carData, seats: text })}
           />
         </View>
 
@@ -656,7 +727,10 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
           <View style={styles.photosHeader}>
             <Text style={styles.sectionTitle}>{t.carPhotos}</Text>
             {carData.photos.length < 6 && !uploadingPhoto && (
-              <TouchableOpacity onPress={handleTakeCarPhoto} style={styles.addPhotoButton}>
+              <TouchableOpacity
+                onPress={handleTakeCarPhoto}
+                style={styles.addPhotoButton}
+              >
                 <Text style={styles.addPhotoText}>{t.addPhoto}</Text>
               </TouchableOpacity>
             )}
@@ -666,12 +740,14 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               </View>
             )}
           </View>
-          
+
           {carData.photos.length > 0 ? (
             <View style={styles.photosGrid}>
               {carData.photos.map((photo, index) => {
                 const photoObj = photo as CarPhoto;
-                const imageUri = photoObj.path ? `${API_URL}/${photoObj.path}` : (photoObj.url || '');
+                const imageUri = photoObj.path
+                  ? `${API_URL}/${photoObj.path}`
+                  : photoObj.url || '';
                 return (
                   <View key={index} style={styles.photoContainer}>
                     <Image
@@ -679,12 +755,12 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                       style={styles.carPhoto}
                       resizeMode="cover"
                     />
-                  <TouchableOpacity
-                    style={styles.removePhotoButton}
-                    onPress={() => handleRemoveCarPhoto(index)}
-                  >
-                    <Icon name="close" size={16} color={theme.colors.white} />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.removePhotoButton}
+                      onPress={() => handleRemoveCarPhoto(index)}
+                    >
+                      <Icon name="close" size={16} color={theme.colors.white} />
+                    </TouchableOpacity>
                   </View>
                 );
               })}
@@ -699,14 +775,22 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               )}
               {uploadingPhoto && (
                 <View style={styles.addPhotoBox}>
-                  <Icon name="pending" size={32} color={theme.colors.textSecondary} />
+                  <Icon
+                    name="pending"
+                    size={32}
+                    color={theme.colors.textSecondary}
+                  />
                   <Text style={styles.addPhotoBoxLabel}>{t.uploading}</Text>
                 </View>
               )}
             </View>
-            ) : uploadingPhoto ? (
+          ) : uploadingPhoto ? (
             <View style={styles.emptyPhotosContainer}>
-              <Icon name="pending" size={48} color={theme.colors.textSecondary} />
+              <Icon
+                name="pending"
+                size={48}
+                color={theme.colors.textSecondary}
+              />
               <Text style={styles.emptyPhotosLabel}>{t.uploadingPhoto}</Text>
             </View>
           ) : (
@@ -723,10 +807,10 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
-          <Button 
-            title={isEditing ? t.updateCar : t.addCar} 
-            onPress={handleSave} 
-            loading={saving} 
+          <Button
+            title={isEditing ? t.updateCar : t.addCar}
+            onPress={handleSave}
+            loading={saving}
           />
           {isEditing && (
             <View style={styles.deleteButtonContainer}>
@@ -749,7 +833,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     color: theme.colors.textPrimary,
   },
   section: {

@@ -56,11 +56,11 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   const getIconColor = () => {
     switch (type) {
       case 'success':
-        return '#10B981'; // green
+        return theme.colors.success;
       case 'error':
-        return '#EF4444'; // red
+        return theme.colors.error;
       case 'warning':
-        return '#F59E0B'; // orange
+        return theme.colors.warning;
       default:
         return theme.colors.primary;
     }
@@ -69,11 +69,11 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   const getTitleColor = () => {
     switch (type) {
       case 'success':
-        return '#10B981';
+        return theme.colors.success;
       case 'error':
-        return '#EF4444';
+        return theme.colors.error;
       case 'warning':
-        return '#F59E0B';
+        return theme.colors.warning;
       default:
         return theme.colors.textPrimary;
     }
@@ -87,15 +87,22 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.container} onPress={e => e.stopPropagation()}>
           {/* Icon */}
-          <View style={[styles.iconContainer, { backgroundColor: `${getIconColor()}15` }]}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: `${getIconColor()}15` },
+            ]}
+          >
             <Icon name={getIconName()} size={32} color={getIconColor()} />
           </View>
 
           {/* Title */}
           {title && (
-            <Text style={[styles.title, { color: getTitleColor() }]}>{title}</Text>
+            <Text style={[styles.title, { color: getTitleColor() }]}>
+              {title}
+            </Text>
           )}
 
           {/* Message */}
@@ -142,7 +149,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: theme.colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.lg,
@@ -154,9 +161,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadowDark,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -202,13 +209,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: 48,
   },
   buttonCancel: {
     backgroundColor: theme.colors.lightGrey,
   },
   buttonDestructive: {
-    backgroundColor: '#EF4444',
+    backgroundColor: theme.colors.error,
   },
   buttonMargin: {
     marginRight: theme.spacing.sm,

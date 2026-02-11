@@ -40,6 +40,43 @@ export interface AvailabilityCreateResponse {
   availabilities: Availability | Availability[];
 }
 
+export type WeekdayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export type WeekPattern = Record<WeekdayKey, { [time: string]: AvailabilityStatus }>;
+
+export interface AvailabilityTemplate {
+  id: number;
+  userId: number;
+  name: string;
+  weekPattern: WeekPattern;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AvailabilityTemplateListResponse {
+  templates: AvailabilityTemplate[];
+}
+
+export interface AvailabilityTemplateSingleResponse {
+  template: AvailabilityTemplate;
+}
+
+export interface AvailabilityTemplateApplyResult {
+  created: number;
+  updated: number;
+  skipped: number;
+}
+
+export const WEEKDAY_KEYS: WeekdayKey[] = [
+  'mon',
+  'tue',
+  'wed',
+  'thu',
+  'fri',
+  'sat',
+  'sun',
+];
+
 // Time period definitions
 export const TIME_PERIODS = {
   morning: {
