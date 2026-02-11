@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,10 +10,12 @@ import type { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useAuthStore } from '../../store/useAuthStore';
 
 import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import { useAlert } from '../../context/AlertContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { showAlert } = useAlert();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,14 +41,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
+      showAlert('Please enter both email and password.', 'Error', undefined, 'error');
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+      showAlert('Please enter a valid email address.', 'Error', undefined, 'error');
       return;
     }
 
@@ -63,7 +65,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const token = response.data?.token || response.data?.data?.token || response.data?.access_token;
       
       if (!token) {
-        Alert.alert('Error', 'Login successful but no token received.');
+        showAlert('Login successful but no token received.', 'Error', undefined, 'error');
         return;
       }
 
@@ -87,7 +89,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setToken(token);
       setUser(userId, email);
 
-      Alert.alert('Success', 'Login successful!', [
+      showAlert('Login successful!', 'Success', [
         {
           text: 'OK',
           onPress: () => {
@@ -95,7 +97,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             // It will automatically navigate to AppTabs (Profile) when token is set
           },
         },
-      ]);
+      ], 'success');
     } catch (e: any) {
       console.error('Login error:', e);
       const errorMessage =
@@ -103,7 +105,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         e.response?.data?.error ||
         e.message ||
         'Failed to login. Please check your credentials and try again.';
-      Alert.alert('Error', errorMessage);
+      showAlert(errorMessage, 'Error', undefined, 'error');
     } finally {
       setLoading(false);
     }

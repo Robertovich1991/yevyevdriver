@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform, PermissionsAndroid, Linking, FlatList, RefreshControl } from 'react-native';
+import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Platform, PermissionsAndroid, Linking, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchCamera, CameraOptions, type Asset } from 'react-native-image-picker';
@@ -10,6 +10,8 @@ import type { ProfileStackParamList } from '../../navigation/ProfileStackNavigat
 import { theme } from '../../assets/style/theme';
 import { Icon } from '../../assets/icons/Icon';
 import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import { useAlert } from '../../context/AlertContext';
+import { Button } from '../../components/ui/Button';
 interface UserData {
   name: string;
   surname: string;
@@ -21,6 +23,7 @@ interface UserData {
 interface CarPhoto {
   filename: string;
   url: string;
+  path?: string;
 }
 
 interface Car {
@@ -38,11 +41,15 @@ interface Car {
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Profile'>;
 
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const { showAlert } = useAlert();
   const profile = useDriverStore((s) => s.profile);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [tempAvatarUri, setTempAvatarUri] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [savingAvatar, setSavingAvatar] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -60,9 +67,53 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadUserData = async () => {
     try {
-      const data = await AsyncStorage.getItem(USER_DATA_KEY);
-      if (data) {
-        setUserData(JSON.parse(data));
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        // Fallback to AsyncStorage if no token
+        const data = await AsyncStorage.getItem(USER_DATA_KEY);
+        if (data) {
+          setUserData(JSON.parse(data));
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Fetch latest user data from API
+      try {
+        const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const apiResponse = response.data?.data || response.data;
+        console.log('API User Data:', JSON.stringify(apiResponse, null, 2));
+        
+        // Handle different response structures
+        const apiUserData = apiResponse?.user || apiResponse;
+        
+        if (apiUserData) {
+          console.log('API Avatar value:', apiUserData.avatar);
+          const updatedUserData: UserData = {
+            name: apiUserData.name || '',
+            surname: apiUserData.surname || '',
+            email: apiUserData.email || '',
+            userId: apiUserData.id?.toString() || apiUserData.userId?.toString() || '',
+            avatar: apiUserData.avatar || undefined,
+          };
+          
+          console.log('Updated UserData avatar:', updatedUserData.avatar);
+          setUserData(updatedUserData);
+          // Also update AsyncStorage
+          await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
+        }
+      } catch (apiError) {
+        console.error('Error fetching user data from API:', apiError);
+        // Fallback to AsyncStorage if API fails
+        const data = await AsyncStorage.getItem(USER_DATA_KEY);
+        if (data) {
+          setUserData(JSON.parse(data));
+        }
       }
     } catch (e) {
       console.error('Error loading user data:', e);
@@ -71,31 +122,45 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const getCurrentUserId = async (): Promise<number | null> => {
+    try {
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        return null;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Handle different response structures
+      const apiResponse = response.data?.data || response.data;
+      const userData = apiResponse?.user || apiResponse;
+      
+      // Extract user ID from response
+      const userId = userData?.id || apiResponse?.id || response.data?.id || response.data?.data?.id || response.data?.user?.id;
+      return userId ? parseInt(userId.toString()) : null;
+    } catch (e: any) {
+      console.error('Error getting current user ID:', e);
+      return null;
+    }
+  };
+
   const loadCars = async () => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
-      const userDataString = await AsyncStorage.getItem(USER_DATA_KEY);
-      if (!userDataString) {
-        setLoading(false);
-        return;
-      }
-
-      const userData = JSON.parse(userDataString);
-      let userId = 0;
-      if (userData.userId) {
-        const parsedId = typeof userData.userId === 'string' 
-          ? parseInt(userData.userId) 
-          : userData.userId;
-        userId = isNaN(parsedId) ? 0 : parsedId;
-      }
-
-      if (userId === 0) {
-        console.error('Invalid userId');
+      // Get userId from API endpoint (more reliable)
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        console.warn('Could not get userId for loading cars');
         setCars([]);
         setLoading(false);
         setRefreshing(false);
@@ -107,7 +172,6 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
 
       const carsData = response.data?.cars || response.data || [];
       setCars(Array.isArray(carsData) ? carsData : []);
@@ -174,10 +238,11 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
     if (Platform.OS === 'android') {
       const hasPermission = await requestCameraPermission();
       if (!hasPermission) {
-        Alert.alert(
-          'Permission Required',
+        showAlert(
           'Camera permission is required to take photos. Please enable it in your device settings.',
-          [{ text: 'OK' }]
+          'Permission Required',
+          [{ text: 'OK' }],
+          'warning'
         );
         return null;
       }
@@ -207,9 +272,9 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
           if (response.errorCode === 'others' && 
               (response.errorMessage?.includes('Manifest.permission.CAMERA') || 
                response.errorMessage?.includes('permission'))) {
-            Alert.alert(
-              'Camera Permission Required',
+            showAlert(
               'Camera permission is required. Please enable it in your device settings, then try again.',
+              'Camera Permission Required',
               [
                 { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
                 {
@@ -219,7 +284,8 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
                     resolve(null);
                   },
                 },
-              ]
+              ],
+              'warning'
             );
             return;
           }
@@ -231,16 +297,17 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
             errorMessage = 'Camera is not available on this device.';
           } else if (response.errorCode === 'permission') {
             errorMessage = 'Camera permission was denied. Please enable it in your device settings.';
-            Alert.alert(
-              'Permission Denied',
+            showAlert(
               errorMessage,
+              'Permission Denied',
               [
                 { text: 'Cancel', style: 'cancel' },
                 {
                   text: 'Open Settings',
                   onPress: () => Linking.openSettings(),
                 },
-              ]
+              ],
+              'error'
             );
             resolve(null);
             return;
@@ -248,7 +315,7 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
             errorMessage = response.errorMessage;
           }
           
-          Alert.alert('Camera Error', errorMessage);
+          showAlert(errorMessage, 'Camera Error', undefined, 'error');
           resolve(null);
           return;
         }
@@ -264,18 +331,220 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
   };
 
 
+  const uploadAvatarImage = async (imageAsset: Asset): Promise<string | null> => {
+    try {
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        return null;
+      }
+
+      if (!imageAsset.uri) {
+        showAlert('Image URI not found.', 'Error', undefined, 'error');
+        return null;
+      }
+
+      const fileName = imageAsset.fileName || `avatar_${Date.now()}.jpg`;
+      const fileType = imageAsset.type || 'image/jpeg';
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: Platform.OS === 'android' ? imageAsset.uri : imageAsset.uri.replace('file://', ''),
+        type: fileType,
+        name: fileName,
+      } as any);
+
+      const response = await axios.post(`${API_BASE_URL}/uploads`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Upload response:', JSON.stringify(response.data, null, 2));
+      const uploadResponse = response.data?.data || response.data;
+      console.log('Upload response parsed:', uploadResponse);
+
+      if (!uploadResponse) {
+        console.error('No upload response data:', response.data);
+        showAlert('Image uploaded but no data received.', 'Error', undefined, 'error');
+        return null;
+      }
+
+      // Extract path and url similar to car photos (prioritize path)
+      const avatarPath = uploadResponse.path || '';
+      const avatarUrl = uploadResponse.url || uploadResponse.path || '';
+      
+      console.log('Upload response path:', avatarPath);
+      console.log('Upload response url:', uploadResponse.url);
+      console.log('Upload response filename:', uploadResponse.filename);
+      
+      // Use path if available (like car photos), otherwise use url
+      let finalAvatarUrl = avatarPath || avatarUrl;
+      
+      if (!finalAvatarUrl) {
+        console.error('No URL/path in upload response:', uploadResponse);
+        showAlert('Image uploaded but no URL received.', 'Error', undefined, 'error');
+        return null;
+      }
+
+      // If the URL is relative, ensure it doesn't start with a slash
+      if (!finalAvatarUrl.startsWith('http://') && !finalAvatarUrl.startsWith('https://')) {
+        finalAvatarUrl = finalAvatarUrl.replace(/^\//, '');
+      }
+
+      console.log('Final avatar URL:', finalAvatarUrl);
+      return finalAvatarUrl;
+    } catch (e: any) {
+      console.error('Upload avatar error:', e);
+      const errorMessage =
+        e.response?.data?.message ||
+        e.response?.data?.error ||
+        e.message ||
+        'Failed to upload image. Please try again.';
+      showAlert(errorMessage, 'Error', undefined, 'error');
+      return null;
+    }
+  };
+
   const handleTakeAvatarPhoto = async () => {
     try {
+      setUploadingAvatar(true);
       const asset = await takePhoto();
-      if (asset && asset.uri && userData) {
-        // For avatar, we can still save locally or upload if needed
-        const updatedData = { ...userData, avatar: asset.uri };
-        await saveUserData(updatedData);
-        Alert.alert('Success', 'Avatar photo updated!');
+      if (asset && asset.uri) {
+        const avatarUrl = await uploadAvatarImage(asset);
+        if (avatarUrl) {
+          setTempAvatarUri(avatarUrl);
+        }
       }
     } catch (e) {
-      Alert.alert('Error', 'Failed to take photo.');
+      showAlert('Failed to take photo.', 'Error', undefined, 'error');
+    } finally {
+      setUploadingAvatar(false);
     }
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!tempAvatarUri || !userData) {
+      return;
+    }
+
+    try {
+      setSavingAvatar(true);
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        showAlert('Authentication token not found. Please login again.', 'Error', undefined, 'error');
+        return;
+      }
+
+      // Get current user ID using the helper function
+      let userId = await getCurrentUserId();
+      
+      // If getCurrentUserId fails, try to use userId from userData as fallback
+      if (!userId && userData.userId) {
+        console.log('getCurrentUserId returned null, trying userData.userId:', userData.userId);
+        const parsedId = typeof userData.userId === 'string' 
+          ? parseInt(userData.userId) 
+          : parseInt(String(userData.userId));
+        if (!isNaN(parsedId) && parsedId > 0) {
+          userId = parsedId;
+          console.log('Using userId from userData:', userId);
+        }
+      }
+
+      if (!userId) {
+        console.error('Could not get userId. API response structure might be different.');
+        console.log('userData:', userData);
+        console.log('Attempting to fetch /auth/me directly...');
+        
+        // Try one more time with direct API call and better logging
+        try {
+          const meResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log('Direct /auth/me response:', JSON.stringify(meResponse.data, null, 2));
+          const apiResponse = meResponse.data?.data || meResponse.data;
+          const userData = apiResponse?.user || apiResponse;
+          const directUserId = userData?.id || apiResponse?.id || meResponse.data?.id || meResponse.data?.data?.id || meResponse.data?.user?.id;
+          if (directUserId) {
+            userId = typeof directUserId === 'number' ? directUserId : parseInt(directUserId.toString());
+            console.log('Found userId from direct call:', userId);
+          }
+        } catch (directError) {
+          console.error('Direct /auth/me call failed:', directError);
+        }
+      }
+
+      if (!userId) {
+        showAlert('Could not retrieve user ID. Please login again.', 'Error', undefined, 'error');
+        return;
+      }
+
+      console.log('Saving avatar with URL:', tempAvatarUri);
+      console.log('Using userId:', userId);
+      
+      // Update user profile with avatar URL
+      const updateResponse = await axios.put(
+        `${API_BASE_URL}/users/update/${userId}`,
+        { avatar: tempAvatarUri },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Update response:', updateResponse.data);
+
+      // Reload user data from API to get the updated avatar
+      try {
+        const reloadResponse = await axios.get(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const apiResponse = reloadResponse.data?.data || reloadResponse.data;
+        const updatedApiUserData = apiResponse?.user || apiResponse;
+        if (updatedApiUserData) {
+          const updatedUserData: UserData = {
+            name: updatedApiUserData.name || userData.name,
+            surname: updatedApiUserData.surname || userData.surname,
+            email: updatedApiUserData.email || userData.email,
+            userId: updatedApiUserData.id?.toString() || updatedApiUserData.userId?.toString() || userData.userId,
+            avatar: updatedApiUserData.avatar || tempAvatarUri,
+          };
+          console.log('Reloaded avatar from API:', updatedUserData.avatar);
+          setUserData(updatedUserData);
+          await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUserData));
+        }
+      } catch (reloadError) {
+        console.error('Error reloading user data:', reloadError);
+        // Fallback: update local storage with tempAvatarUri
+        const updatedData = { ...userData, avatar: tempAvatarUri };
+        await saveUserData(updatedData);
+      }
+      
+      setTempAvatarUri(null);
+
+      showAlert('Avatar updated successfully!', 'Success', undefined, 'success');
+    } catch (e: any) {
+      console.error('Save avatar error:', e);
+      console.error('Error response:', e.response?.data);
+      const errorMessage =
+        e.response?.data?.message ||
+        e.response?.data?.error ||
+        e.message ||
+        'Failed to update avatar. Please try again.';
+      showAlert(errorMessage, 'Error', undefined, 'error');
+    } finally {
+      setSavingAvatar(false);
+    }
+  };
+
+  const handleCancelAvatar = () => {
+    setTempAvatarUri(null);
   };
 
   const handleCarPress = (car: Car) => {
@@ -286,7 +555,6 @@ console.log(response.data,'[[[[[[[[[[[[[[[[[fffff[[[[[[[[[[[');
     navigation.navigate('CarDetail', {});
   };
 
-console.log(cars,'[[[[[[[[[[[[[[[[[[[[[[[[[[[[');
 
   // Use registration data if available, otherwise fall back to profile
   const firstName = userData?.name || (profile?.name ? profile.name.split(' ')[0] : '');
@@ -320,32 +588,91 @@ console.log(cars,'[[[[[[[[[[[[[[[[[[[[[[[[[[[[');
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Avatar Section */}
         <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={handleTakeAvatarPhoto} activeOpacity={0.8}>
-            {userData?.avatar ? (
-              <View>
-                <Image source={{ uri: userData.avatar }} style={styles.avatar} />
-                <View style={styles.cameraIconOverlay}>
-                  <Icon name="ok" size={20} color={theme.colors.white} />
-                </View>
-              </View>
+          <View style={styles.avatarWrapper}>
+            {tempAvatarUri || userData?.avatar ? (
+              <Image 
+                source={{ 
+                  uri: (() => {
+                  
+                    
+                    const avatarUri = tempAvatarUri || userData?.avatar || '';
+                    console.log('Avatar URI from state/storage:', avatarUri);
+                    if (!avatarUri) return '';
+                    
+                    // If it's already a full URL, use it directly
+                    if (avatarUri.startsWith('http://') || avatarUri.startsWith('https://')) {
+                      console.log('Using full URL:', avatarUri);
+                      return avatarUri;
+                    }
+                    
+                    // Check if it's a storage path (like storage/images/...)
+                    if (avatarUri.startsWith('storage/')) {
+                      const finalUri = `${API_URL}/${avatarUri}`;
+                      console.log('Storage path - Final Avatar URI:', finalUri);
+                      return finalUri;
+                    }
+                    
+                    // Otherwise, prepend API_URL for relative paths
+                    const finalUri = `${API_URL}/${avatarUri.replace(/^\//, '')}`;
+                    console.log('Relative path - Final Avatar URI:', finalUri);
+                    return finalUri;
+                  })()
+                }} 
+                style={styles.avatar}
+                onError={(error) => {
+                  console.error('Avatar image load error:', error.nativeEvent.error);
+                  console.log('Failed URI:', tempAvatarUri || userData?.avatar);
+                }}
+              />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>{getInitials()}</Text>
-                <View style={styles.cameraIconOverlay}>
-                  <Icon name="ok" size={20} color={theme.colors.white} />
-                </View>
               </View>
             )}
-          </TouchableOpacity>
-          <Text style={styles.avatarHint}>Tap to take photo</Text>
+            <TouchableOpacity 
+              onPress={handleTakeAvatarPhoto} 
+              style={styles.editIconButton}
+              activeOpacity={0.7}
+              disabled={uploadingAvatar || savingAvatar}
+            >
+              {uploadingAvatar ? (
+                <ActivityIndicator size="small" color={theme.colors.white} />
+              ) : (
+                <Icon name="edit" size={20} color={theme.colors.white} />
+              )}
+            </TouchableOpacity>
+          </View>
+          {tempAvatarUri && (
+            <View style={styles.avatarActions}>
+              <TouchableOpacity
+                onPress={handleCancelAvatar}
+                style={[styles.avatarActionButton, styles.cancelButton]}
+                disabled={savingAvatar}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleSaveAvatar}
+                style={[styles.avatarActionButton, styles.saveButton]}
+                disabled={savingAvatar}
+              >
+                {savingAvatar ? (
+                  <Text style={styles.saveButtonText}>Saving...</Text>
+                ) : (
+                  <Text style={styles.saveButtonText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Name and Surname */}
         <View style={styles.nameSection}>
           <View style={styles.nameRow}>
             <View style={styles.nameContainer}>
-              <Text style={styles.nameText}>{firstName}</Text>
-              {lastName && <Text style={styles.surnameText}>{lastName}</Text>}
+              <Text style={styles.nameText}>
+                {firstName}{lastName ? ` ${lastName}` : ''}
+              </Text>
               {userData?.email && (
                 <Text style={styles.emailText}>{userData.email}</Text>
               )}
@@ -387,7 +714,6 @@ console.log(cars,'[[[[[[[[[[[[[[[[[[[[[[[[[[[[');
               data={cars}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
-                console.log(`${API_URL}/${item.photos[0]?.path}`,'[[[[[[[[[[[[[[[[[item[[[[[[[[[['),
                 
                 <TouchableOpacity
                   style={styles.carCard}
@@ -397,7 +723,17 @@ console.log(cars,'[[[[[[[[[[[[[[[[[[[[[[[[[[[[');
                   <View style={styles.carCardContent}>
                     {item.photos && item.photos.length > 0 && (
                       <Image
-                        source={{ uri: `${API_URL}/${item.photos[0]?.path}`}}
+                        source={{ 
+                          uri: (() => {
+                            const photo = item.photos[0];
+                            const photoPath = photo?.path || photo?.url || '';
+                            if (!photoPath) return '';
+                            if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+                              return photoPath;
+                            }
+                            return `${API_URL}/${photoPath.replace(/^\//, '')}`;
+                          })()
+                        }}
                         style={styles.carCardImage}
                         resizeMode="cover"
                       />
@@ -451,6 +787,10 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
     marginBottom: theme.spacing.md,
   },
+  avatarWrapper: {
+    position: 'relative',
+    marginBottom: theme.spacing.sm,
+  },
   avatar: {
     width: 120,
     height: 120,
@@ -473,7 +813,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.white,
   },
-  cameraIconOverlay: {
+  editIconButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
@@ -486,12 +826,35 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: theme.colors.white,
   },
-  cameraIcon: {
-    fontSize: 20,
+  loadingIndicator: {
+    width: 20,
+    height: 20,
   },
-  avatarHint: {
+  avatarActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
     marginTop: theme.spacing.sm,
+  },
+  avatarActionButton: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.borderRadius.md,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: theme.colors.lightGrey,
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  cancelButtonText: {
     color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  saveButtonText: {
+    color: theme.colors.white,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   nameSection: {
     alignItems: 'center',
@@ -511,11 +874,6 @@ const styles = StyleSheet.create({
   nameText: {
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.xs,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  surnameText: {
-    color: theme.colors.textPrimary,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.semibold,
   },

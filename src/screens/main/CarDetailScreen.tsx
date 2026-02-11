@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform, PermissionsAndroid, Linking } from 'react-native';
+import { Text, View, Image, ScrollView, StyleSheet, TouchableOpacity, Platform, PermissionsAndroid, Linking } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchCamera, CameraOptions, type Asset } from 'react-native-image-picker';
@@ -14,6 +14,7 @@ import { useLanguageStore } from '../../store/useLanguageStore';
 import { getCarDetailTranslations } from '../../i18n/translations';
 
 import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import { useAlert } from '../../context/AlertContext';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'CarDetail'>;
 
@@ -40,6 +41,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const isEditing = !!carId || !!car;
   const language = useLanguageStore((s) => s.language);
   const t = useMemo(() => getCarDetailTranslations(language), [language]);
+  const { showAlert } = useAlert();
   
   const [carData, setCarData] = useState<CarData>({
     brand: '',
@@ -83,7 +85,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        Alert.alert(t.error, t.authTokenNotFound);
+        showAlert(t.authTokenNotFound, t.error, undefined, 'error');
         return;
       }
 
@@ -107,7 +109,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       
       if (!car || (typeof car === 'object' && Object.keys(car).length === 0)) {
         console.error('No car data in response:', response.data);
-        Alert.alert(t.error, t.noCarDataReceived);
+        showAlert(t.noCarDataReceived, t.error, undefined, 'error');
         return;
       }
 
@@ -138,7 +140,7 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         e.response?.data?.error ||
         e.message ||
         'Failed to load car data.';
-      Alert.alert(t.error, errorMessage);
+      showAlert(errorMessage, t.error, undefined, 'error');
       // Don't navigate back on error, keep existing data visible
     }
   };
@@ -175,10 +177,11 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const takePhoto = async (): Promise<Asset | null> => {
     const hasPermission = await requestCameraPermission();
     if (!hasPermission) {
-      Alert.alert(
-        t.permissionRequired,
+      showAlert(
         t.cameraPermissionRequiredSettings,
-        [{ text: t.ok }]
+        t.permissionRequired,
+        [{ text: t.ok }],
+        'warning'
       );
       return null;
     }
@@ -206,25 +209,26 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             errorMessage = t.cameraUnavailable;
           } else if (response.errorCode === 'permission') {
             errorMessage = t.cameraPermissionDenied;
-            Alert.alert(
-              t.permissionDenied,
+            showAlert(
               errorMessage,
+              t.permissionDenied,
               [
                 { text: t.cancel, style: 'cancel' },
                 {
                   text: t.openSettings,
                   onPress: () => Linking.openSettings(),
                 },
-              ]
+              ],
+              'error'
             );
             resolve(null);
             return;
           } else if (response.errorCode === 'others' && 
               (response.errorMessage?.includes('Manifest.permission.CAMERA') || 
                response.errorMessage?.includes('permission'))) {
-            Alert.alert(
-              t.cameraPermissionRequired,
+            showAlert(
               t.cameraPermissionRequiredSettings,
+              t.cameraPermissionRequired,
               [
                 { text: t.cancel, style: 'cancel', onPress: () => resolve(null) },
                 {
@@ -234,14 +238,15 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     resolve(null);
                   },
                 },
-              ]
+              ],
+              'warning'
             );
             return;
           } else if (response.errorMessage) {
             errorMessage = response.errorMessage;
           }
           
-          Alert.alert(t.cameraError, errorMessage);
+          showAlert(errorMessage, t.cameraError, undefined, 'error');
           resolve(null);
           return;
         }
@@ -260,12 +265,12 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
-        Alert.alert(t.error, t.pleaseLoginAgain);
+        showAlert(t.pleaseLoginAgain, t.error, undefined, 'error');
         return null;
       }
 
       if (!imageAsset.uri) {
-        Alert.alert(t.error, t.imageUriNotFound);
+        showAlert(t.imageUriNotFound, t.error, undefined, 'error');
         return null;
       }
 
@@ -292,7 +297,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       
       if (!uploadResponse) {
         console.error('Upload response:', response.data);
-        Alert.alert(t.error, t.imageUploadedNoData);
+        showAlert(t.imageUploadedNoData, t.error, undefined, 'error');
         return null;
       }
 
@@ -306,7 +311,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       // Validate that at least one of url or path exists
       if (!photoObject.url && !photoObject.path) {
         console.error('Upload response:', response.data);
-        Alert.alert(t.error, t.imageUploadedNoUrl);
+        showAlert(t.imageUploadedNoUrl, t.error, undefined, 'error');
         return null;
       }
 
@@ -318,7 +323,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
         e.response?.data?.error ||
         e.message ||
         t.failedToUploadImage;
-      Alert.alert(t.error, errorMessage);
+      showAlert(errorMessage, t.error, undefined, 'error');
       return null;
     }
   };
@@ -326,12 +331,12 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
   const handleTakeCarPhoto = async () => {
     try {
       if (carData.photos.length >= 6) {
-        Alert.alert(t.limit, t.maxPhotosLimit);
+        showAlert(t.maxPhotosLimit, t.limit, undefined, 'warning');
         return;
       }
 
       if (uploadingPhoto) {
-        Alert.alert(t.pleaseWait, t.pleaseWaitUploading);
+        showAlert(t.pleaseWaitUploading, t.pleaseWait, undefined, 'info');
         return;
       }
 
@@ -343,9 +348,9 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
           const photoInfo = await uploadImage(asset);
           if (photoInfo) {
             setCarData({ ...carData, photos: [...carData.photos, photoInfo] });
-            Alert.alert(t.success, t.photoUploadedSuccess);
+            showAlert(t.photoUploadedSuccess, t.success, undefined, 'success');
           } else {
-            Alert.alert(t.error, t.photoUploadFailed);
+            showAlert(t.photoUploadFailed, t.error, undefined, 'error');
           }
         } finally {
           setUploadingPhoto(false);
@@ -354,7 +359,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     } catch (e) {
       console.error('Error taking car photo:', e);
       setUploadingPhoto(false);
-      Alert.alert(t.error, t.failedToTakePhoto);
+      showAlert(t.failedToTakePhoto, t.error, undefined, 'error');
     }
   };
 
@@ -367,9 +372,9 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
     // Check if we have carId (only for existing cars)
     if (!carData.id) {
       // For new cars, just remove from local state
-      Alert.alert(
-        t.remove,
+      showAlert(
         t.removePhotoConfirm,
+        t.remove,
         [
           { text: t.cancel, style: 'cancel' },
           {
@@ -380,14 +385,15 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               setCarData({ ...carData, photos: updatedPhotos });
             },
           },
-        ]
+        ],
+        'warning'
       );
       return;
     }
 
-    Alert.alert(
-      t.remove,
+    showAlert(
       t.removePhotoConfirm,
+      t.remove,
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -397,14 +403,14 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
             try {
               const token = await AsyncStorage.getItem(TOKEN_KEY);
               if (!token) {
-                Alert.alert(t.error, t.authTokenNotFound);
+                showAlert(t.authTokenNotFound, t.error, undefined, 'error');
                 return;
               }
 
               const photoObj = photo as CarPhoto;
               
               if (!photoObj.path) {
-                Alert.alert(t.error, t.cannotDeletePhotoMissingPath);
+                showAlert(t.cannotDeletePhotoMissingPath, t.error, undefined, 'error');
                 return;
               }
 
@@ -428,7 +434,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 setCarData({ ...currentCarData, photos: updatedPhotos });
               }
 
-              Alert.alert(t.success, t.photoDeletedSuccess);
+              showAlert(t.photoDeletedSuccess, t.success, undefined, 'success');
             } catch (e: any) {
               console.error('Delete photo error:', e);
               const errorMessage =
@@ -436,11 +442,12 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 e.response?.data?.error ||
                 e.message ||
                 t.failedToDeletePhoto;
-              Alert.alert(t.error, errorMessage);
+              showAlert(errorMessage, t.error, undefined, 'error');
             }
           },
         },
-      ]
+      ],
+      'warning'
     );
   };
 
@@ -449,7 +456,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
       setSaving(true);
 
       if (!carData.brand || !carData.model || !carData.licensePlate) {
-        Alert.alert(t.error, t.fillRequiredFields);
+        showAlert(t.fillRequiredFields, t.error, undefined, 'error');
         setSaving(false);
         return;
       }
@@ -508,7 +515,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
             Authorization: `Bearer ${token}`,
           },
         });
-        Alert.alert(t.success, t.carUpdatedSuccess);
+        showAlert(t.carUpdatedSuccess, t.success, undefined, 'success');
       } else {
         // Add new car
         await axios.post(`${API_BASE_URL}/cars/add`, carPayload, {
@@ -517,7 +524,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
             Authorization: `Bearer ${token}`,
           },
         });
-        Alert.alert(t.success, t.carAddedSuccess);
+        showAlert(t.carAddedSuccess, t.success, undefined, 'success');
       }
 
       navigation.goBack();
@@ -528,7 +535,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
         e.response?.data?.error ||
         e.message ||
         t.failedToSaveCar;
-      Alert.alert(t.error, errorMessage);
+      showAlert(errorMessage, t.error, undefined, 'error');
     } finally {
       setSaving(false);
     }
@@ -536,13 +543,13 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
 
   const handleDelete = async () => {
     if (!carData.id) {
-      Alert.alert(t.error, t.cannotDeleteCarWithoutId);
+      showAlert(t.cannotDeleteCarWithoutId, t.error, undefined, 'error');
       return;
     }
 
-    Alert.alert(
-      t.deleteCar,
+    showAlert(
       t.deleteCarConfirm,
+      t.deleteCar,
       [
         { text: t.cancel, style: 'cancel' },
         {
@@ -553,7 +560,7 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
               setDeleting(true);
               const token = await AsyncStorage.getItem(TOKEN_KEY);
               if (!token) {
-                Alert.alert(t.error, t.authTokenNotFound);
+                showAlert(t.authTokenNotFound, t.error, undefined, 'error');
                 return;
               }
 
@@ -563,12 +570,12 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 },
               });
 
-              Alert.alert(t.success, t.carDeletedSuccess, [
+              showAlert(t.carDeletedSuccess, t.success, [
                 {
                   text: t.ok,
                   onPress: () => navigation.goBack(),
                 },
-              ]);
+              ], 'success');
             } catch (e: any) {
               console.error('Delete car error:', e);
               const errorMessage =
@@ -576,13 +583,14 @@ console.log(formData,'[[[[[[[[[[[[[[[[[formData[[[[[[[[[[');
                 e.response?.data?.error ||
                 e.message ||
                 t.failedToDeleteCar;
-              Alert.alert(t.error, errorMessage);
+              showAlert(errorMessage, t.error, undefined, 'error');
             } finally {
               setDeleting(false);
             }
           },
         },
-      ]
+      ],
+      'warning'
     );
   };
 

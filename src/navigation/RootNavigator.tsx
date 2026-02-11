@@ -6,6 +6,7 @@ import { AuthNavigator } from './AuthNavigator';
 import { AppTabsNavigator } from './AppTabsNavigator';
 import { useAuthStore } from '../store/useAuthStore';
 import { useLanguageStore } from '../store/useLanguageStore';
+import { AlertProvider } from '../context/AlertContext';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -52,13 +53,15 @@ export const RootNavigator: React.FC = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!token ? (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      ) : (
-        <Stack.Screen name="AppTabs" component={AppTabsNavigator} />
-      )}
-    </Stack.Navigator>
+    <AlertProvider>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!token ? (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        ) : (
+          <Stack.Screen name="AppTabs" component={AppTabsNavigator} />
+        )}
+      </Stack.Navigator>
+    </AlertProvider>
   );
 };
 

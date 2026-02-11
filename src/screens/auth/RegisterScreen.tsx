@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -12,7 +12,9 @@ import { useAuthStore } from '../../store/useAuthStore';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import { useAlert } from '../../context/AlertContext';
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+  const { showAlert } = useAlert();
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
@@ -24,25 +26,25 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleRegister = async () => {
     if (!name || !email || !phone || !password) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+      showAlert('Please fill in all required fields.', 'Error', undefined, 'error');
       return;
     }
 
     if (!password || password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
+      showAlert('Password must be at least 6 characters.', 'Error', undefined, 'error');
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+      showAlert('Please enter a valid email address.', 'Error', undefined, 'error');
       return;
     }
 
     // Basic phone validation
     if (phone.trim().length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number.');
+      showAlert('Please enter a valid phone number.', 'Error', undefined, 'error');
       return;
     }
 
@@ -65,7 +67,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       const token = response.data?.token || response.data?.data?.token || response.data?.access_token;
       
       if (!token) {
-        Alert.alert('Error', 'Registration successful but no token received.');
+        showAlert('Registration successful but no token received.', 'Error', undefined, 'error');
         return;
       }
 
@@ -86,7 +88,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       setToken(token);
       setUser(userData.userId, email);
 
-      Alert.alert('Success', 'Registration successful!', [
+      showAlert('Registration successful!', 'Success', [
         {
           text: 'OK',
           onPress: () => {
@@ -94,7 +96,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             // It will automatically navigate to AppTabs (Profile) when token is set
           },
         },
-      ]);
+      ], 'success');
     } catch (e: any) {
       console.error('Registration error:', e);
       const errorMessage =
@@ -102,7 +104,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         e.response?.data?.error ||
         e.message ||
         'Failed to create account. Please try again.';
-      Alert.alert('Error', errorMessage);
+      showAlert(errorMessage, 'Error', undefined, 'error');
     } finally {
       setLoading(false);
     }
