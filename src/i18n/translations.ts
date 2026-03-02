@@ -114,7 +114,7 @@ const en: CarDetailTranslations = {
   modelPlaceholder: 'e.g., Camry',
   yearPlaceholder: 'e.g., 2020',
   colorPlaceholder: 'e.g., Black',
-  licensePlatePlaceholder: 'e.g., ABC-1234',
+  licensePlatePlaceholder: 'e.g., 12TT121',
   carTypePlaceholder: 'e.g., Sedan, SUV, Hatchback',
   seatsPlaceholder: 'e.g., 4, 5, 6, 7',
 
@@ -205,7 +205,7 @@ const hy: CarDetailTranslations = {
   modelPlaceholder: '\u0585\u0580. Camry',
   yearPlaceholder: '\u0585\u0580. 2020',
   colorPlaceholder: '\u0585\u0580. \u054d\u0587',
-  licensePlatePlaceholder: '\u0585\u0580. ABC-1234',
+  licensePlatePlaceholder: '\u0585\u0580. 12TT121',
   carTypePlaceholder: '\u0585\u0580. \u054d\u0565\u0564\u0561\u0576, SUV',
   seatsPlaceholder: '\u0585\u0580. 4, 5, 6, 7',
 
@@ -296,7 +296,7 @@ const ru: CarDetailTranslations = {
   modelPlaceholder: '\u043d\u0430\u043f\u0440., Camry',
   yearPlaceholder: '\u043d\u0430\u043f\u0440., 2020',
   colorPlaceholder: '\u043d\u0430\u043f\u0440., \u0427\u0435\u0440\u043d\u044b\u0439',
-  licensePlatePlaceholder: '\u043d\u0430\u043f\u0440., ABC-1234',
+  licensePlatePlaceholder: '\u043d\u0430\u043f\u0440., 12TT121',
   carTypePlaceholder: '\u043d\u0430\u043f\u0440., \u0421\u0435\u0434\u0430\u043d, SUV, \u0425\u044d\u0442\u0447\u0431\u0435\u043a',
   seatsPlaceholder: '\u043d\u0430\u043f\u0440., 4, 5, 6, 7',
 

@@ -44,6 +44,8 @@ interface UserData {
   avatar?: string;
   currentCarId?: number;
   drivingLicencePhotos?: LicencePhoto[];
+  drivingLicense?: unknown;
+  drivingLicence?: unknown;
 }
 
 interface Car {
@@ -94,12 +96,94 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
     loadCars();
   }, []);
 
+  const normalizeLicencePhotos = (rawPhotos: unknown): LicencePhoto[] => {
+    let parsedPhotos = rawPhotos;
+
+    if (typeof parsedPhotos === 'string') {
+      const trimmed = parsedPhotos.trim();
+      if (!trimmed) {
+        return [];
+      }
+
+      try {
+        parsedPhotos = JSON.parse(trimmed);
+      } catch {
+        parsedPhotos = trimmed;
+      }
+    }
+
+    const candidates = Array.isArray(parsedPhotos)
+      ? parsedPhotos
+      : parsedPhotos
+      ? [parsedPhotos]
+      : [];
+
+    const flattened = candidates.flatMap((item: any) => {
+      if (!item) {
+        return [];
+      }
+
+      if (Array.isArray(item)) {
+        return item;
+      }
+
+      if (typeof item === 'object' && (item.front || item.back)) {
+        return [item.front, item.back].filter(Boolean);
+      }
+
+      return [item];
+    });
+
+    return flattened
+      .map((item: any, index: number): LicencePhoto => {
+        if (typeof item === 'string') {
+          const source = item.trim();
+          return {
+            filename: source.split('/').pop() || `licence_${index + 1}.jpg`,
+            path: source,
+            url: source,
+          };
+        }
+
+        const path = String(item?.path || item?.url || item?.uri || '').trim();
+        const url = String(item?.url || item?.path || item?.uri || '').trim();
+        const filename = String(
+          item?.filename ||
+            item?.name ||
+            url.split('/').pop() ||
+            path.split('/').pop() ||
+            `licence_${index + 1}.jpg`,
+        );
+
+        return {
+          filename,
+          path,
+          url,
+        };
+      })
+      .filter(photo => Boolean(photo.path || photo.url));
+  };
+
+  const resolvePhotoUri = (photo: Partial<LicencePhoto> | null | undefined) => {
+    const source = String(photo?.path || photo?.url || '').trim();
+    if (!source) {
+      return '';
+    }
+
+    if (source.startsWith('http://') || source.startsWith('https://')) {
+      return source;
+    }
+
+    return `${API_URL}/${source.replace(/^\//, '')}`;
+  };
+
   const loadUserData = async () => {
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (!token) {
         // Fallback to AsyncStorage if no token
         const data = await AsyncStorage.getItem(USER_DATA_KEY);
+
         if (data) {
           const userData: UserData = JSON.parse(data);
           const nameParts = (userData.name || '').split(' ');
@@ -113,7 +197,13 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           setPhone(userData.phone || '');
           setAvatar(userData.avatar || null);
           setCurrentCarId(userData.currentCarId || null);
-          setDrivingLicencePhotos(userData.drivingLicencePhotos || []);
+          setDrivingLicencePhotos(
+            normalizeLicencePhotos(
+              userData.drivingLicencePhotos ||
+                userData.drivingLicense ||
+                userData.drivingLicence,
+            ),
+          );
         }
         setLoading(false);
         return;
@@ -126,7 +216,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-
+        console.log('====================================');
+        console.log(response.data);
+        console.log('====================================');
         // Handle different response structures
         const apiResponse = response.data?.data || response.data;
         const apiUserData = apiResponse?.user || apiResponse;
@@ -158,25 +250,22 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           // Load driving licence photos from API
           const apiDrivingLicence =
             apiUserData.drivingLicense ||
+            apiUserData.drivingLicence ||
             apiUserData.drivingLicencePhotos ||
+            apiResponse?.driver?.drivingLicense ||
+            apiResponse?.driver?.drivingLicence ||
+            apiResponse?.driver?.drivingLicencePhotos ||
+            apiResponse?.profile?.drivingLicense ||
+            apiResponse?.profile?.drivingLicence ||
+            apiResponse?.profile?.drivingLicencePhotos ||
+            response.data?.driver?.drivingLicense ||
+            response.data?.driver?.drivingLicence ||
+            response.data?.driver?.drivingLicencePhotos ||
             [];
           console.log('API drivingLicense:', apiDrivingLicence);
-          if (
-            Array.isArray(apiDrivingLicence) &&
-            apiDrivingLicence.length > 0
-          ) {
-            const licencePhotos: LicencePhoto[] = apiDrivingLicence.map(
-              (item: any) => ({
-                filename: item.filename || '',
-                path: item.path || '',
-                url: item.url || item.path || '',
-              }),
-            );
-            console.log('Parsed driving licence photos:', licencePhotos);
-            setDrivingLicencePhotos(licencePhotos);
-          } else {
-            setDrivingLicencePhotos([]);
-          }
+          const licencePhotos = normalizeLicencePhotos(apiDrivingLicence);
+          console.log('Parsed driving licence photos:', licencePhotos);
+          setDrivingLicencePhotos(licencePhotos);
 
           // Also update AsyncStorage
           const updatedUserData: UserData = {
@@ -196,13 +285,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                   : parseInt(String(apiCurrentCarId))
                 : undefined,
             drivingLicencePhotos:
-              Array.isArray(apiDrivingLicence) && apiDrivingLicence.length > 0
-                ? apiDrivingLicence.map((item: any) => ({
-                    filename: item.filename || '',
-                    path: item.path || '',
-                    url: item.url || item.path || '',
-                  }))
-                : undefined,
+              licencePhotos.length > 0 ? licencePhotos : undefined,
+            drivingLicense:
+              licencePhotos.length > 0 ? licencePhotos : undefined,
           };
           await AsyncStorage.setItem(
             USER_DATA_KEY,
@@ -226,7 +311,13 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           setPhone(userData.phone || '');
           setAvatar(userData.avatar || null);
           setCurrentCarId(userData.currentCarId || null);
-          setDrivingLicencePhotos(userData.drivingLicencePhotos || []);
+          setDrivingLicencePhotos(
+            normalizeLicencePhotos(
+              userData.drivingLicencePhotos ||
+                userData.drivingLicense ||
+                userData.drivingLicence,
+            ),
+          );
         }
       }
     } catch (e) {
@@ -1127,27 +1218,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   renderItem={({ item, index }) => {
-                    // Match exact pattern from CarDetailScreen
-                    let imageUri = '';
-                    if (item.path) {
-                      // If path starts with storage/, use it directly, otherwise prepend API_URL
-                      if (item.path.startsWith('storage/')) {
-                        imageUri = `${API_URL}/${item.path}`;
-                      } else if (
-                        item.path.startsWith('http://') ||
-                        item.path.startsWith('https://')
-                      ) {
-                        imageUri = item.path;
-                      } else {
-                        imageUri = `${API_URL}/${item.path.replace(/^\//, '')}`;
-                      }
-                    } else if (item.url) {
-                      imageUri =
-                        item.url.startsWith('http://') ||
-                        item.url.startsWith('https://')
-                          ? item.url
-                          : `${API_URL}/${item.url.replace(/^\//, '')}`;
-                    }
+                    const imageUri = resolvePhotoUri(item);
                     console.log(
                       'Driving licence photo URI:',
                       imageUri,
