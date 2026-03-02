@@ -216,9 +216,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('====================================');
-        console.log(response.data);
-        console.log('====================================');
+
         // Handle different response structures
         const apiResponse = response.data?.data || response.data;
         const apiUserData = apiResponse?.user || apiResponse;

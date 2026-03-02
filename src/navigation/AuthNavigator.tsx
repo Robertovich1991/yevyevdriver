@@ -20,7 +20,7 @@ export type AuthStackParamList = {
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export const AuthNavigator: React.FC = () => (
-  <Stack.Navigator>
+  <Stack.Navigator id="AuthStack">
     <Stack.Screen
       name="Login"
       component={LoginScreen}
