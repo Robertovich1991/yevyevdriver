@@ -1,118 +1,384 @@
-import React, { useState, useEffect } from 'react';
-import { FlatList, Text, View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { Button } from '../../components/ui/Button';
+import { colors } from '../../assets/style/colors';
+import { spacing } from '../../assets/style/spacing';
+import { typography } from '../../assets/style/typography';
+import { TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import {
+  getDailyDriverApprovedOrders,
+  getMainRoutes,
+  type MainRoute,
+} from '../../api/orders';
+import { useAlert } from '../../context/AlertContext';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getOrdersTranslations } from '../../i18n/translations';
 
 const SEEN_ORDERS_KEY = '@seen_orders';
 
 interface Order {
   id: string;
   name: string;
-  date: string;
-  address: string;
   phoneNumber: string;
+  startAddress: string;
+  endAddress: string;
+  personCount: number;
 }
 
-// Sample orders array
-const sampleOrders: Order[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    date: '2024-01-15 10:30 AM',
-    address: '123 Main Street, New York, NY 10001',
-    phoneNumber: '+1 (555) 123-4567',
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    date: '2024-01-15 11:15 AM',
-    address: '456 Oak Avenue, Los Angeles, CA 90001',
-    phoneNumber: '+1 (555) 234-5678',
-  },
-  {
-    id: '3',
-    name: 'Michael Johnson',
-    date: '2024-01-15 12:00 PM',
-    address: '789 Pine Road, Chicago, IL 60601',
-    phoneNumber: '+1 (555) 345-6789',
-  },
-  {
-    id: '4',
-    name: 'Sarah Williams',
-    date: '2024-01-15 1:30 PM',
-    address: '321 Elm Street, Houston, TX 77001',
-    phoneNumber: '+1 (555) 456-7890',
-  },
-  {
-    id: '5',
-    name: 'David Brown',
-    date: '2024-01-15 2:45 PM',
-    address: '654 Maple Drive, Phoenix, AZ 85001',
-    phoneNumber: '+1 (555) 567-8901',
-  },
-  {
-    id: '6',
-    name: 'Emily Davis',
-    date: '2024-01-15 3:20 PM',
-    address: '987 Cedar Lane, Philadelphia, PA 19101',
-    phoneNumber: '+1 (555) 678-9012',
-  },
-];
+interface TripItem {
+  id: string;
+  date: string;
+  time: string;
+  seatCount: number;
+  freeCount: number;
+  status: string;
+  orders: Order[];
+  routeGroupKey?: string;
+}
+
+interface DriverInfo {
+  id: string;
+  name: string;
+  carModel: string;
+  carNumber: string;
+  approvedOrdersCount: number;
+}
+
+const formatDateForApi = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getFormattedOrderDate = (value: unknown, fallbackDate: Date) => {
+  if (!value) {
+    return formatDateForApi(fallbackDate);
+  }
+
+  const parsedDate = new Date(String(value));
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(value);
+  }
+
+  return parsedDate.toLocaleString();
+};
+
+const mapNestedOrderToUi = (
+  order: any,
+  index: number,
+  unknownCustomerText: string,
+): Order => {
+  const rawId = order?.id ?? order?.orderId ?? order?._id ?? `${index}`;
+
+  return {
+    id: String(rawId),
+    name:
+      order?.client?.name ||
+      order?.name ||
+      order?.customerName ||
+      order?.passengerName ||
+      unknownCustomerText,
+    phoneNumber:
+      order?.client?.phone_number ||
+      order?.phone_number ||
+      order?.phoneNumber ||
+      '-',
+    startAddress: order?.start_address || order?.pickupAddress || '-',
+    endAddress: order?.end_address || order?.dropoffAddress || '-',
+    personCount:
+      typeof order?.person_count === 'number'
+        ? order.person_count
+        : typeof order?.personCount === 'number'
+        ? order.personCount
+        : 1,
+  };
+};
+
+const parseTripsFromApi = (
+  apiOrders: any[],
+  selectedDate: Date,
+  unknownCustomerText: string,
+): { driverInfo: DriverInfo | null; trips: TripItem[] } => {
+  const firstItem = apiOrders?.[0] || null;
+  const driver = firstItem?.driver || {};
+
+  const driverInfo: DriverInfo | null = firstItem
+    ? {
+        id: String(driver?.id ?? ''),
+        name: String(driver?.name || '-'),
+        carModel: String(driver?.car_model || '-'),
+        carNumber: String(driver?.car_number || '-'),
+        approvedOrdersCount: Number(firstItem?.approved_orders_count || 0),
+      }
+    : null;
+
+  const trips: TripItem[] = [];
+
+  apiOrders.forEach(item => {
+    const driverObject = item?.driver;
+    if (!driverObject || typeof driverObject !== 'object') {
+      return;
+    }
+
+    Object.entries(driverObject).forEach(([key, value]) => {
+      if (!Array.isArray(value)) {
+        return;
+      }
+
+      value.forEach((trip: any, tripIndex: number) => {
+        const mappedOrders = Array.isArray(trip?.orders)
+          ? trip.orders.map((nestedOrder: any, orderIndex: number) =>
+              mapNestedOrderToUi(nestedOrder, orderIndex, unknownCustomerText),
+            )
+          : [];
+
+        trips.push({
+          id: String(trip?.id ?? `${key}-${tripIndex}`),
+          date: getFormattedOrderDate(trip?.date, selectedDate),
+          time: String(trip?.time || '-'),
+          seatCount:
+            typeof trip?.seat_count === 'number'
+              ? trip.seat_count
+              : typeof trip?.seatCount === 'number'
+              ? trip.seatCount
+              : 0,
+          freeCount:
+            typeof trip?.free_count === 'number'
+              ? trip.free_count
+              : typeof trip?.freeCount === 'number'
+              ? trip.freeCount
+              : 0,
+          status: String(trip?.status || '-'),
+          routeGroupKey: key,
+          orders: mappedOrders,
+        });
+      });
+    });
+  });
+
+  return { driverInfo, trips };
+};
+
+const getDriverIdFromUserData = (userData: any): string => {
+  const rawDriverId =
+    userData?.['ev-ev_user_id'] ??
+    userData?.ev_ev_user_id ??
+    userData?.evEvUserId ??
+    userData?.user?.['ev-ev_user_id'] ??
+    userData?.user?.ev_ev_user_id ??
+    userData?.data?.['ev-ev_user_id'] ??
+    userData?.data?.ev_ev_user_id ??
+    userData?.userId ??
+    userData?.id ??
+    userData?.driverId ??
+    userData?.driver?.id;
+  return rawDriverId ? String(rawDriverId) : '';
+};
 
 export const OrdersScreen: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>(sampleOrders);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { showAlert } = useAlert();
+  const language = useLanguageStore(s => s.language);
+  const t = useMemo(() => getOrdersTranslations(language), [language]);
+  const [tripItems, setTripItems] = useState<TripItem[]>([]);
+  const [driverInfo, setDriverInfo] = useState<DriverInfo | null>(null);
+  const [routes, setRoutes] = useState<MainRoute[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [loadingRoutes, setLoadingRoutes] = useState(false);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<TripItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [seenOrderIds, setSeenOrderIds] = useState<Set<string>>(new Set());
+  const [seenTripIds, setSeenTripIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadSeenOrders();
+    loadMainRoutes();
   }, []);
+
+  useEffect(() => {
+    if (!selectedRouteId) {
+      return;
+    }
+
+    loadOrders();
+  }, [selectedRouteId, selectedDate]);
+
+  const selectedDateLabel = useMemo(
+    () => formatDateForApi(selectedDate),
+    [selectedDate],
+  );
 
   const loadSeenOrders = async () => {
     try {
       const data = await AsyncStorage.getItem(SEEN_ORDERS_KEY);
       if (data) {
         const seenIds = JSON.parse(data) as string[];
-        setSeenOrderIds(new Set(seenIds));
+        setSeenTripIds(new Set(seenIds));
       }
     } catch (e) {
       console.error('Error loading seen orders:', e);
     }
   };
 
-  const markOrderAsSeen = async (orderId: string) => {
+  const loadMainRoutes = useCallback(async () => {
     try {
-      const updatedSeenIds = new Set(seenOrderIds);
-      updatedSeenIds.add(orderId);
-      setSeenOrderIds(updatedSeenIds);
-      await AsyncStorage.setItem(SEEN_ORDERS_KEY, JSON.stringify(Array.from(updatedSeenIds)));
+      setLoadingRoutes(true);
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+
+      if (!token) {
+        showAlert(t.authenticationTokenNotFound, t.error, undefined, 'error');
+        return;
+      }
+
+      const mainRoutes = await getMainRoutes(token);
+
+      setRoutes(mainRoutes);
+
+      if (mainRoutes.length > 0) {
+        setSelectedRouteId(prev => prev || mainRoutes[0].id);
+      }
+    } catch (error: any) {
+      console.error('Error loading main routes:', error);
+      showAlert(
+        error?.response?.data?.message || t.failedToLoadRoutes,
+        t.error,
+        undefined,
+        'error',
+      );
+    } finally {
+      setLoadingRoutes(false);
+    }
+  }, [showAlert]);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      setLoadingOrders(true);
+
+      const [token, userDataString] = await Promise.all([
+        AsyncStorage.getItem(TOKEN_KEY),
+        AsyncStorage.getItem(USER_DATA_KEY),
+      ]);
+
+      if (!token) {
+        showAlert(t.authenticationTokenNotFound, t.error, undefined, 'error');
+        setTripItems([]);
+        setDriverInfo(null);
+        return;
+      }
+
+      if (!userDataString) {
+        showAlert(t.userDataNotFound, t.error, undefined, 'error');
+        setTripItems([]);
+        setDriverInfo(null);
+        return;
+      }
+
+      const userData = JSON.parse(userDataString);
+      const driverId = getDriverIdFromUserData(userData);
+
+      if (!driverId) {
+        showAlert(t.driverIdNotFound, t.error, undefined, 'error');
+        setTripItems([]);
+        setDriverInfo(null);
+        return;
+      }
+
+      const apiOrders = await getDailyDriverApprovedOrders({
+        token,
+        mainRouteId: selectedRouteId,
+        driverId,
+        date: selectedDateLabel,
+      });
+
+      const parsedResult = parseTripsFromApi(
+        apiOrders,
+        selectedDate,
+        t.unknownCustomer,
+      );
+      setDriverInfo(parsedResult.driverInfo);
+      setTripItems(parsedResult.trips);
+    } catch (error: any) {
+      console.error('Error loading orders:', error);
+      setTripItems([]);
+      setDriverInfo(null);
+      showAlert(
+        error?.response?.data?.message || t.failedToLoadOrders,
+        t.error,
+        undefined,
+        'error',
+      );
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, [selectedDate, selectedDateLabel, selectedRouteId, showAlert, t]);
+
+  const markTripAsSeen = async (tripId: string) => {
+    try {
+      const updatedSeenIds = new Set(seenTripIds);
+      updatedSeenIds.add(tripId);
+      setSeenTripIds(updatedSeenIds);
+      await AsyncStorage.setItem(
+        SEEN_ORDERS_KEY,
+        JSON.stringify(Array.from(updatedSeenIds)),
+      );
     } catch (e) {
       console.error('Error saving seen orders:', e);
     }
   };
 
-  const handleOrderPress = (order: Order) => {
-    setSelectedOrder(order);
+  const handleTripPress = (trip: TripItem) => {
+    setSelectedTrip(trip);
     setModalVisible(true);
-    // Mark order as seen when modal is opened
-    markOrderAsSeen(order.id);
+    markTripAsSeen(trip.id);
   };
 
   const handleCloseModal = () => {
     setModalVisible(false);
-    setSelectedOrder(null);
+    setSelectedTrip(null);
   };
 
-  const renderOrderItem = ({ item }: { item: Order }) => {
-    const isSelected = selectedOrder?.id === item.id;
-    const isSeen = seenOrderIds.has(item.id);
-    
+  const onDateChange = (_event: any, date?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
+
+  const onPressRefresh = () => {
+    if (!selectedRouteId) {
+      return;
+    }
+    loadOrders();
+  };
+
+  const totalOrdersCount = useMemo(
+    () => tripItems.reduce((sum, trip) => sum + trip.orders.length, 0),
+    [tripItems],
+  );
+
+  const renderTripItem = ({ item }: { item: TripItem }) => {
+    const isSelected = selectedTrip?.id === item.id;
+    const isSeen = seenTripIds.has(item.id);
+
     return (
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => handleOrderPress(item)}
+        onPress={() => handleTripPress(item)}
         style={[
           styles.orderCard,
           isSelected && styles.orderCardSelected,
@@ -120,19 +386,26 @@ export const OrdersScreen: React.FC = () => {
         ]}
       >
         <View style={styles.orderHeader}>
-          <Text style={styles.orderName}>{item.name}</Text>
+          <Text style={styles.orderName}>{`${t.trip} ${item.time}`}</Text>
           <Text style={styles.orderDate}>{item.date}</Text>
         </View>
-        
+
         <View style={styles.orderDetails}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Address:</Text>
-            <Text style={styles.detailValue} numberOfLines={1}>{item.address}</Text>
+            <Text style={styles.detailLabel}>{`${t.ordersLabel}:`}</Text>
+            <Text style={styles.detailValue}>{item.orders.length}</Text>
           </View>
-          
+
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Phone:</Text>
-            <Text style={styles.detailValue}>{item.phoneNumber}</Text>
+            <Text style={styles.detailLabel}>{`${t.seats}:`}</Text>
+            <Text
+              style={styles.detailValue}
+            >{`${item.freeCount}/${item.seatCount} ${t.free}`}</Text>
+          </View>
+
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{`${t.status}:`}</Text>
+            <Text style={styles.detailValue}>{item.status}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -142,19 +415,98 @@ export const OrdersScreen: React.FC = () => {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Orders</Text>
-        <Text style={styles.headerSubtitle}>{orders.length} orders</Text>
+        <Text style={styles.headerTitle}>{t.ordersTitle}</Text>
+        <Text
+          style={styles.headerSubtitle}
+        >{`${totalOrdersCount} ${t.ordersCount}`}</Text>
       </View>
-      
+
+      {driverInfo && (
+        <View style={styles.driverInfoCard}>
+          <Text style={styles.driverInfoName}>{driverInfo.name}</Text>
+          <Text
+            style={styles.driverInfoMeta}
+          >{`${driverInfo.carModel} • ${driverInfo.carNumber}`}</Text>
+          <Text
+            style={styles.driverInfoMeta}
+          >{`${t.approved}: ${driverInfo.approvedOrdersCount}`}</Text>
+        </View>
+      )}
+
+      <View style={styles.filtersContainer}>
+        <Text style={styles.filterLabel}>{t.route}</Text>
+        {loadingRoutes ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={styles.loadingText}>{t.loadingRoutes}</Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.routesListContent}
+          >
+            {routes.map((route: any) => {
+              const isActive = selectedRouteId === route.id;
+
+              return (
+                <TouchableOpacity
+                  key={route.id}
+                  style={[styles.routeChip, isActive && styles.routeChipActive]}
+                  onPress={() => setSelectedRouteId(route.id)}
+                >
+                  <Text
+                    style={[
+                      styles.routeChipText,
+                      isActive && styles.routeChipTextActive,
+                    ]}
+                  >
+                    {route.route_name || route.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        <Text style={styles.filterLabel}>{t.date}</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>{selectedDateLabel}</Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onDateChange}
+          />
+        )}
+
+        <Button
+          title={t.refresh}
+          onPress={onPressRefresh}
+          loading={loadingOrders}
+          disabled={!selectedRouteId}
+        />
+      </View>
+
       <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id}
-        renderItem={renderOrderItem}
+        data={tripItems}
+        keyExtractor={item => item.id}
+        renderItem={renderTripItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No orders available</Text>
+            {loadingOrders ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <Text style={styles.emptyText}>{t.noOrdersAvailable}</Text>
+            )}
           </View>
         }
       />
@@ -169,45 +521,77 @@ export const OrdersScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {selectedOrder && (
+              {selectedTrip && (
                 <>
                   <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Order Details</Text>
-                    <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
+                    <Text
+                      style={styles.modalTitle}
+                    >{`${t.trip} ${selectedTrip.time} ${t.ordersLabel}`}</Text>
+                    <TouchableOpacity
+                      onPress={handleCloseModal}
+                      style={styles.closeButton}
+                    >
                       <Text style={styles.closeButtonText}>✕</Text>
                     </TouchableOpacity>
                   </View>
 
                   <View style={styles.modalBody}>
                     <View style={styles.modalSection}>
-                      <Text style={styles.modalSectionTitle}>Customer Information</Text>
+                      <Text style={styles.modalSectionTitle}>
+                        {t.tripInformation}
+                      </Text>
                       <View style={styles.modalDetailRow}>
-                        <Text style={styles.modalDetailLabel}>Name:</Text>
-                        <Text style={styles.modalDetailValue}>{selectedOrder.name}</Text>
+                        <Text
+                          style={styles.modalDetailLabel}
+                        >{`${t.date}:`}</Text>
+                        <Text style={styles.modalDetailValue}>
+                          {selectedTrip.date}
+                        </Text>
                       </View>
                       <View style={styles.modalDetailRow}>
-                        <Text style={styles.modalDetailLabel}>Phone:</Text>
-                        <Text style={styles.modalDetailValue}>{selectedOrder.phoneNumber}</Text>
+                        <Text
+                          style={styles.modalDetailLabel}
+                        >{`${t.time}:`}</Text>
+                        <Text style={styles.modalDetailValue}>
+                          {selectedTrip.time}
+                        </Text>
                       </View>
                     </View>
 
                     <View style={styles.modalSection}>
-                      <Text style={styles.modalSectionTitle}>Order Information</Text>
-                      <View style={styles.modalDetailRow}>
-                        <Text style={styles.modalDetailLabel}>Date:</Text>
-                        <Text style={styles.modalDetailValue}>{selectedOrder.date}</Text>
-                      </View>
-                      <View style={styles.modalDetailRow}>
-                        <Text style={styles.modalDetailLabel}>Address:</Text>
-                        <Text style={styles.modalDetailValue}>{selectedOrder.address}</Text>
-                      </View>
+                      <Text style={styles.modalSectionTitle}>
+                        {t.ordersLabel}
+                      </Text>
+                      {selectedTrip.orders.length === 0 ? (
+                        <Text style={styles.emptyText}>{t.noOrdersInTrip}</Text>
+                      ) : (
+                        selectedTrip.orders.map(order => (
+                          <View key={order.id} style={styles.tripOrderItem}>
+                            <Text style={styles.tripOrderName}>
+                              {order.name}
+                            </Text>
+                            <Text
+                              style={styles.tripOrderText}
+                            >{`${t.phone}: ${order.phoneNumber}`}</Text>
+                            <Text
+                              style={styles.tripOrderText}
+                            >{`${t.from}: ${order.startAddress}`}</Text>
+                            <Text
+                              style={styles.tripOrderText}
+                            >{`${t.to}: ${order.endAddress}`}</Text>
+                            <Text
+                              style={styles.tripOrderText}
+                            >{`${t.passengers}: ${order.personCount}`}</Text>
+                          </View>
+                        ))
+                      )}
                     </View>
                   </View>
                 </>
               )}
 
               <View style={styles.modalFooter}>
-                <Button title="Close" onPress={handleCloseModal} />
+                <Button title={t.close} onPress={handleCloseModal} />
               </View>
             </ScrollView>
           </View>
@@ -219,31 +603,113 @@ export const OrdersScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 16,
-    paddingHorizontal: 4,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
+    fontSize: typography.fontSize.xxl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+  },
+  driverInfoCard: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: spacing.borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  driverInfoName: {
+    color: colors.textPrimary,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+    marginBottom: spacing.xs,
+  },
+  driverInfoMeta: {
+    color: colors.textSecondary,
+    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.xs,
+  },
+  filtersContainer: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: spacing.borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  filterLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  loadingText: {
+    marginLeft: spacing.sm,
+    color: colors.textSecondary,
+    fontSize: typography.fontSize.sm,
+  },
+  routesListContent: {
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  routeChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: spacing.borderRadius.round,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.background,
+  },
+  routeChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  routeChipText: {
+    color: colors.textPrimary,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
+  routeChipTextActive: {
+    color: colors.textWhite,
+  },
+  dateButton: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: spacing.borderRadius.lg,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.white,
+    marginBottom: spacing.md,
+  },
+  dateButtonText: {
+    color: colors.textPrimary,
+    fontSize: typography.fontSize.md,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: spacing.lg,
   },
   orderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: colors.white,
+    borderRadius: spacing.borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm + spacing.xs,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderStyle: 'solid',
-    shadowColor: '#38AA35',
+    shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
       height: 1,
@@ -253,21 +719,21 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   orderCardSelected: {
-    borderColor: '#3B82F6',
+    borderColor: colors.info,
     borderWidth: 2,
     borderStyle: 'solid',
-    backgroundColor: '#EFF6FF',
-    shadowColor: '#38AA35',
+    backgroundColor: colors.backgroundLight,
+    shadowColor: colors.primary,
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
   },
   orderCardSeen: {
-    borderColor: '#38AA35',
+    borderColor: colors.primary,
     borderWidth: 2,
     borderStyle: 'solid',
-    backgroundColor: '#ECFDF5',
-    shadowColor: '#2D882A',
+    backgroundColor: colors.background,
+    shadowColor: colors.primaryDark,
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
@@ -276,22 +742,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
-    paddingBottom: 12,
+    marginBottom: spacing.sm + spacing.xs,
+    paddingBottom: spacing.sm + spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderLight,
   },
   orderName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
     flex: 1,
   },
   orderDate: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
-    marginLeft: 12,
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.medium,
+    marginLeft: spacing.sm + spacing.xs,
   },
   orderDetails: {
     gap: 8,
@@ -301,97 +767,116 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   detailLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-    width: 80,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondary,
+    width: 120,
   },
   detailValue: {
-    fontSize: 14,
-    color: '#111827',
+    fontSize: typography.fontSize.sm,
+    color: colors.textPrimary,
     flex: 1,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: spacing.xxl,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#9CA3AF',
+    fontSize: typography.fontSize.md,
+    color: colors.textLight,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: spacing.borderRadius.xl,
+    borderTopRightRadius: spacing.borderRadius.xl,
     maxHeight: '80%',
-    paddingBottom: 20,
+    paddingBottom: spacing.md,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.md + spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.textPrimary,
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeButtonText: {
-    fontSize: 18,
-    color: '#6B7280',
-    fontWeight: 'bold',
+    fontSize: typography.fontSize.lg,
+    color: colors.textSecondary,
+    fontWeight: typography.fontWeight.bold,
   },
   modalBody: {
-    padding: 20,
+    padding: spacing.md + spacing.xs,
   },
   modalSection: {
-    marginBottom: 24,
+    marginBottom: spacing.lg,
   },
   modalSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm + spacing.xs,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
   modalDetailRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: spacing.sm + spacing.xs,
     paddingVertical: 8,
   },
   modalDetailLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#6B7280',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondary,
     width: 100,
   },
   modalDetailValue: {
-    fontSize: 15,
-    color: '#111827',
+    fontSize: typography.fontSize.sm,
+    color: colors.textPrimary,
     flex: 1,
-    fontWeight: '500',
+    fontWeight: typography.fontWeight.medium,
   },
   modalFooter: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: spacing.md + spacing.xs,
+    paddingTop: spacing.sm,
+  },
+  tripOrderItem: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: spacing.borderRadius.sm,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.backgroundLight,
+  },
+  tripOrderName: {
+    color: colors.textPrimary,
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.semibold,
+    marginBottom: spacing.xs,
+  },
+  tripOrderText: {
+    color: colors.textSecondary,
+    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.xs,
   },
 });

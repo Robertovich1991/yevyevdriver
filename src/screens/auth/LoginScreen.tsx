@@ -9,7 +9,12 @@ import { Button } from '../../components/ui/Button';
 import type { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useAuthStore } from '../../store/useAuthStore';
 
-import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
+import {
+  API_BASE_URL,
+  API_URL,
+  TOKEN_KEY,
+  USER_DATA_KEY,
+} from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -19,8 +24,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const setUser = useAuthStore((s) => s.setUser);
-  const setToken = useAuthStore((s) => s.setToken);
+  const setUser = useAuthStore(s => s.setUser);
+  const setToken = useAuthStore(s => s.setToken);
 
   useEffect(() => {
     // Try to load saved user data on mount
@@ -41,14 +46,24 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showAlert('Please enter both email and password.', 'Error', undefined, 'error');
+      showAlert(
+        'Please enter both email and password.',
+        'Error',
+        undefined,
+        'error',
+      );
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      showAlert('Please enter a valid email address.', 'Error', undefined, 'error');
+      showAlert(
+        'Please enter a valid email address.',
+        'Error',
+        undefined,
+        'error',
+      );
       return;
     }
 
@@ -62,10 +77,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       });
 
       // Extract token from response (adjust based on your API response structure)
-      const token = response.data?.token || response.data?.data?.token || response.data?.access_token;
-      
+      const token =
+        response.data?.token ||
+        response.data?.data?.token ||
+        response.data?.access_token;
+
       if (!token) {
-        showAlert('Login successful but no token received.', 'Error', undefined, 'error');
+        showAlert(
+          'Login successful but no token received.',
+          'Error',
+          undefined,
+          'error',
+        );
         return;
       }
 
@@ -73,15 +96,27 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       await AsyncStorage.setItem(TOKEN_KEY, token);
 
       // Update user data in AsyncStorage if available from response
-      const userId = response.data?.user?.id || response.data?.data?.user?.id || email.toLowerCase().trim();
-      const userName = response.data?.user?.name || response.data?.data?.user?.name || '';
-      const userPhone = response.data?.user?.phone || response.data?.data?.user?.phone || '';
-      
+      const userId =
+        response.data?.user?.id ||
+        response.data?.data?.user?.id ||
+        email.toLowerCase().trim();
+      const userName =
+        response.data?.user?.name || response.data?.data?.user?.name || '';
+      const userPhone =
+        response.data?.user?.phone || response.data?.data?.user?.phone || '';
+      const evEvUserId =
+        response.data?.user?.['ev-ev_user_id'] ||
+        response.data?.data?.user?.['ev-ev_user_id'] ||
+        response.data?.user?.ev_ev_user_id ||
+        response.data?.data?.user?.ev_ev_user_id ||
+        '';
+
       const userData = {
         name: userName,
         email: email.toLowerCase().trim(),
         phone: userPhone,
         userId: userId,
+        ev_ev_user_id: evEvUserId,
       };
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
 
@@ -89,15 +124,20 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setToken(token);
       setUser(userId, email);
 
-      showAlert('Login successful!', 'Success', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Navigation will be handled by RootNavigator based on auth state
-            // It will automatically navigate to AppTabs (Profile) when token is set
+      showAlert(
+        'Login successful!',
+        'Success',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navigation will be handled by RootNavigator based on auth state
+              // It will automatically navigate to AppTabs (Profile) when token is set
+            },
           },
-        },
-      ], 'success');
+        ],
+        'success',
+      );
     } catch (e: any) {
       console.error('Login error:', e);
       const errorMessage =
@@ -162,4 +202,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

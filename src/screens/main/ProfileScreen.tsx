@@ -39,6 +39,7 @@ interface UserData {
   surname: string;
   email: string;
   userId: string;
+  ev_ev_user_id?: string;
   avatar?: string;
 }
 
@@ -124,6 +125,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               apiUserData.id?.toString() ||
               apiUserData.userId?.toString() ||
               '',
+            ev_ev_user_id:
+              apiUserData.ev_ev_user_id?.toString() ||
+              apiUserData['ev-ev_user_id']?.toString() ||
+              undefined,
             avatar: apiUserData.avatar || undefined,
           };
 
@@ -611,6 +616,10 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               updatedApiUserData.id?.toString() ||
               updatedApiUserData.userId?.toString() ||
               userData.userId,
+            ev_ev_user_id:
+              updatedApiUserData.ev_ev_user_id?.toString() ||
+              updatedApiUserData['ev-ev_user_id']?.toString() ||
+              userData.ev_ev_user_id,
             avatar: updatedApiUserData.avatar || tempAvatarUri,
           };
           console.log('Reloaded avatar from API:', updatedUserData.avatar);

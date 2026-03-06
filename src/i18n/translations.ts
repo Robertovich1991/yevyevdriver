@@ -1011,3 +1011,137 @@ export const availabilityListTranslations: Record<Language, AvailabilityListTran
 export const getAvailabilityListTranslations = (language: Language): AvailabilityListTranslations => {
   return availabilityListTranslations[language] || availabilityListTranslations.en;
 };
+
+export interface OrdersTranslations {
+  ordersTitle: string;
+  ordersCount: string;
+  approved: string;
+  route: string;
+  loadingRoutes: string;
+  date: string;
+  time: string;
+  refresh: string;
+  noOrdersAvailable: string;
+  trip: string;
+  ordersLabel: string;
+  seats: string;
+  free: string;
+  status: string;
+  tripInformation: string;
+  noOrdersInTrip: string;
+  phone: string;
+  from: string;
+  to: string;
+  passengers: string;
+  close: string;
+  unknownCustomer: string;
+  authenticationTokenNotFound: string;
+  userDataNotFound: string;
+  driverIdNotFound: string;
+  failedToLoadRoutes: string;
+  failedToLoadOrders: string;
+  error: string;
+}
+
+const ordersEn: OrdersTranslations = {
+  ordersTitle: 'Orders',
+  ordersCount: 'orders',
+  approved: 'Approved',
+  route: 'Route',
+  loadingRoutes: 'Loading routes...',
+  date: 'Date',
+  time: 'Time',
+  refresh: 'Refresh',
+  noOrdersAvailable: 'No orders available',
+  trip: 'Trip',
+  ordersLabel: 'Orders',
+  seats: 'Seats',
+  free: 'free',
+  status: 'Status',
+  tripInformation: 'Trip Information',
+  noOrdersInTrip: 'No orders in this trip',
+  phone: 'Phone',
+  from: 'From',
+  to: 'To',
+  passengers: 'Passengers',
+  close: 'Close',
+  unknownCustomer: 'Unknown customer',
+  authenticationTokenNotFound: 'Authentication token not found. Please login again.',
+  userDataNotFound: 'User data not found. Please login again.',
+  driverIdNotFound: 'Driver ID not found. Please login again.',
+  failedToLoadRoutes: 'Failed to load routes. Please try again.',
+  failedToLoadOrders: 'Failed to load orders. Please try again.',
+  error: 'Error',
+};
+
+const ordersHy: OrdersTranslations = {
+  ordersTitle: 'Պատվերներ',
+  ordersCount: 'պատվեր',
+  approved: 'Հաստատված',
+  route: 'Երթուղի',
+  loadingRoutes: 'Երթուղիները բեռնվում են...',
+  date: 'Ամսաթիվ',
+  time: 'Ժամ',
+  refresh: 'Թարմացնել',
+  noOrdersAvailable: 'Պատվերներ չկան',
+  trip: 'Ուղերթ',
+  ordersLabel: 'Պատվերներ',
+  seats: 'Տեղեր',
+  free: 'ազատ',
+  status: 'Կարգավիճակ',
+  tripInformation: 'Ուղերթի տվյալներ',
+  noOrdersInTrip: 'Այս ուղերթում պատվերներ չկան',
+  phone: 'Հեռախոս',
+  from: 'Մեկնում',
+  to: 'Ժամանում',
+  passengers: 'Ուղևորներ',
+  close: 'Փակել',
+  unknownCustomer: 'Անհայտ հաճախորդ',
+  authenticationTokenNotFound: 'Նույնականացման նշանը չի գտնվել։ Խնդրում ենք կրկին մուտք գործել։',
+  userDataNotFound: 'Օգտատիրոջ տվյալները չեն գտնվել։ Խնդրում ենք կրկին մուտք գործել։',
+  driverIdNotFound: 'Վարորդի ID-ն չի գտնվել։ Խնդրում ենք կրկին մուտք գործել։',
+  failedToLoadRoutes: 'Չհաջողվեց բեռնել երթուղիները։ Խնդրում ենք փորձել կրկին։',
+  failedToLoadOrders: 'Չհաջողվեց բեռնել պատվերները։ Խնդրում ենք փորձել կրկին։',
+  error: 'Սխալ',
+};
+
+const ordersRu: OrdersTranslations = {
+  ordersTitle: 'Заказы',
+  ordersCount: 'заказов',
+  approved: 'Подтверждено',
+  route: 'Маршрут',
+  loadingRoutes: 'Загрузка маршрутов...',
+  date: 'Дата',
+  time: 'Время',
+  refresh: 'Обновить',
+  noOrdersAvailable: 'Заказы отсутствуют',
+  trip: 'Рейс',
+  ordersLabel: 'Заказы',
+  seats: 'Места',
+  free: 'свободно',
+  status: 'Статус',
+  tripInformation: 'Информация о рейсе',
+  noOrdersInTrip: 'В этом рейсе нет заказов',
+  phone: 'Телефон',
+  from: 'Откуда',
+  to: 'Куда',
+  passengers: 'Пассажиры',
+  close: 'Закрыть',
+  unknownCustomer: 'Неизвестный клиент',
+  authenticationTokenNotFound: 'Токен авторизации не найден. Войдите снова.',
+  userDataNotFound: 'Данные пользователя не найдены. Войдите снова.',
+  driverIdNotFound: 'ID водителя не найден. Войдите снова.',
+  failedToLoadRoutes: 'Не удалось загрузить маршруты. Попробуйте снова.',
+  failedToLoadOrders: 'Не удалось загрузить заказы. Попробуйте снова.',
+  error: 'Ошибка',
+};
+
+export const ordersTranslations: Record<Language, OrdersTranslations> = {
+  en: ordersEn,
+  hy: ordersHy,
+  ru: ordersRu,
+};
+
+export const getOrdersTranslations = (language: Language): OrdersTranslations => {
+  return ordersTranslations[language] || ordersTranslations.en;
+};

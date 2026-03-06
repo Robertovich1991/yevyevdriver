@@ -40,6 +40,7 @@ interface UserData {
   surname: string;
   email: string;
   userId: string;
+  ev_ev_user_id?: string;
   phone?: string;
   avatar?: string;
   currentCarId?: number;
@@ -274,6 +275,10 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
               apiUserData.id?.toString() ||
               apiUserData.userId?.toString() ||
               '',
+            ev_ev_user_id:
+              apiUserData.ev_ev_user_id?.toString() ||
+              apiUserData['ev-ev_user_id']?.toString() ||
+              undefined,
             phone: apiUserData.phone || undefined,
             avatar: apiUserData.avatar || undefined,
             currentCarId:
