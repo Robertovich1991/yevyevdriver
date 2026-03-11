@@ -5,16 +5,21 @@ import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { TextInputField } from '../../components/ui/TextInputField';
 import { Button } from '../../components/ui/Button';
 import type { AuthStackParamList } from '../../navigation/AuthNavigator';
+import {
+  ARMENIA_PHONE_PREFIX,
+  formatArmeniaPhoneInput,
+  isValidArmeniaPhone,
+} from '../../utils/phone';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'PhoneAuth'>;
 
 export const PhoneAuthScreen: React.FC<Props> = ({ navigation }) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(ARMENIA_PHONE_PREFIX);
   const [loading, setLoading] = useState(false);
 
   const sendCode = async () => {
-    if (!phoneNumber) {
-      Alert.alert('Error', 'Enter phone number.');
+    if (!isValidArmeniaPhone(phoneNumber)) {
+      Alert.alert('Error', 'Phone number must be +374 followed by 8 digits.');
       return;
     }
     try {
@@ -33,9 +38,9 @@ export const PhoneAuthScreen: React.FC<Props> = ({ navigation }) => {
       <TextInputField
         label="Phone number"
         keyboardType="phone-pad"
-        placeholder="+1 555 123 4567"
+        placeholder="+374XXXXXXXX"
         value={phoneNumber}
-        onChangeText={setPhoneNumber}
+        onChangeText={text => setPhoneNumber(formatArmeniaPhoneInput(text))}
       />
       <Button title="Send code" onPress={sendCode} loading={loading} />
     </ScreenContainer>

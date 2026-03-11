@@ -34,6 +34,12 @@ import {
   USER_DATA_KEY,
 } from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
+import {
+  ARMENIA_PHONE_PREFIX,
+  formatArmeniaPhoneInput,
+  isArmeniaPhonePrefixOnly,
+  isValidArmeniaPhone,
+} from '../../utils/phone';
 
 interface UserData {
   name: string;
@@ -80,7 +86,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(ARMENIA_PHONE_PREFIX);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [currentCarId, setCurrentCarId] = useState<number | null>(null);
   const [drivingLicencePhotos, setDrivingLicencePhotos] = useState<
@@ -195,7 +201,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           setName(firstName);
           setSurname(lastName);
           setEmail(userData.email || '');
-          setPhone(userData.phone || '');
+          setPhone(formatArmeniaPhoneInput(userData.phone || ARMENIA_PHONE_PREFIX));
           setAvatar(userData.avatar || null);
           setCurrentCarId(userData.currentCarId || null);
           setDrivingLicencePhotos(
@@ -231,7 +237,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           setName(firstName);
           setSurname(lastName);
           setEmail(apiUserData.email || '');
-          setPhone(apiUserData.phone || '');
+          setPhone(
+            formatArmeniaPhoneInput(apiUserData.phone || ARMENIA_PHONE_PREFIX),
+          );
           setAvatar(apiUserData.avatar || null);
 
           // Set currentCarId from API (convert to number if needed)
@@ -311,7 +319,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           setName(firstName);
           setSurname(lastName);
           setEmail(userData.email || '');
-          setPhone(userData.phone || '');
+          setPhone(formatArmeniaPhoneInput(userData.phone || ARMENIA_PHONE_PREFIX));
           setAvatar(userData.avatar || null);
           setCurrentCarId(userData.currentCarId || null);
           setDrivingLicencePhotos(
@@ -779,6 +787,13 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
       return { valid: false, error: 'Please enter a valid email address.' };
     }
 
+    if (!isArmeniaPhonePrefixOnly(phone) && !isValidArmeniaPhone(phone)) {
+      return {
+        valid: false,
+        error: 'Phone number must be +374 followed by 8 digits.',
+      };
+    }
+
     return { valid: true };
   };
 
@@ -831,7 +846,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
         name: name.trim(),
         surname: surname.trim() || undefined,
         email: email.toLowerCase().trim(),
-        phone: phone.trim() || undefined,
+        phone: isArmeniaPhonePrefixOnly(phone) ? undefined : phone.trim(),
       };
 
       // Add currentCarId if selected
@@ -872,7 +887,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           name: name.trim(),
           surname: surname.trim() || '',
           email: email.toLowerCase().trim(),
-          phone: phone.trim() || undefined,
+          phone: isArmeniaPhonePrefixOnly(phone) ? undefined : phone.trim(),
           currentCarId: currentCarId || undefined,
           drivingLicencePhotos:
             drivingLicencePhotos.length > 0 ? drivingLicencePhotos : undefined,
@@ -912,7 +927,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           name: name.trim(),
           surname: surname.trim() || '',
           email: email.toLowerCase().trim(),
-          phone: phone.trim() || undefined,
+          phone: isArmeniaPhonePrefixOnly(phone) ? undefined : phone.trim(),
           currentCarId: currentCarId || undefined,
           drivingLicencePhotos:
             drivingLicencePhotos.length > 0 ? drivingLicencePhotos : undefined,
@@ -1090,9 +1105,9 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
             <TextInputField
               label="Phone"
-              placeholder="Enter your phone number"
+              placeholder="+374XXXXXXXX"
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={text => setPhone(formatArmeniaPhoneInput(text))}
               keyboardType="phone-pad"
             />
 

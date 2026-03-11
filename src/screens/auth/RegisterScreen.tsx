@@ -13,19 +13,24 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 import { API_BASE_URL, API_URL, TOKEN_KEY, USER_DATA_KEY } from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
+import {
+  ARMENIA_PHONE_PREFIX,
+  formatArmeniaPhoneInput,
+  isValidArmeniaPhone,
+} from '../../utils/phone';
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { showAlert } = useAlert();
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(ARMENIA_PHONE_PREFIX);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const setUser = useAuthStore((s) => s.setUser);
   const setToken = useAuthStore((s) => s.setToken);
 
   const handleRegister = async () => {
-    if (!name || !email || !phone || !password) {
+    if (!name || !email || !password) {
       showAlert('Please fill in all required fields.', 'Error', undefined, 'error');
       return;
     }
@@ -42,9 +47,13 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    // Basic phone validation
-    if (phone.trim().length < 10) {
-      showAlert('Please enter a valid phone number.', 'Error', undefined, 'error');
+    if (!isValidArmeniaPhone(phone)) {
+      showAlert(
+        'Phone number must be +374 followed by 8 digits.',
+        'Error',
+        undefined,
+        'error',
+      );
       return;
     }
 
@@ -138,9 +147,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       <TextInputField
         label="Phone"
         keyboardType="phone-pad"
-        placeholder="Enter your phone number"
+        placeholder="+374XXXXXXXX"
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={text => setPhone(formatArmeniaPhoneInput(text))}
       />
       <TextInputField
         label="Password"
