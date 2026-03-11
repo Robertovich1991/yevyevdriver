@@ -89,6 +89,14 @@ export interface CarDetailTranslations {
   limit: string;
   success: string;
   pleaseWait: string;
+  // Car colors (for dropdown)
+  colors: {
+    [key: string]: string;
+  };
+  // Car types (for dropdown) – only English is localized
+  types?: {
+    [key: string]: string;
+  };
 }
 
 const en: CarDetailTranslations = {
@@ -180,6 +188,49 @@ const en: CarDetailTranslations = {
   limit: 'Limit',
   success: 'Success',
   pleaseWait: 'Please wait',
+  colors: {
+    White: 'White',
+    Black: 'Black',
+    Silver: 'Silver',
+    Gray: 'Gray',
+    Blue: 'Blue',
+    Red: 'Red',
+    Green: 'Green',
+    Yellow: 'Yellow',
+    Orange: 'Orange',
+    Brown: 'Brown',
+    Beige: 'Beige',
+    Gold: 'Gold',
+    Purple: 'Purple',
+    Pink: 'Pink',
+    Burgundy: 'Burgundy',
+    Navy: 'Navy',
+    'Dark Green': 'Dark Green',
+    'Light Blue': 'Light Blue',
+    Champagne: 'Champagne',
+    Other: 'Other',
+  },
+  types: {
+    Sedan: 'Sedan',
+    SUV: 'SUV',
+    Hatchback: 'Hatchback',
+    Coupe: 'Coupe',
+    Convertible: 'Convertible',
+    Wagon: 'Wagon',
+    Van: 'Van',
+    Pickup: 'Pickup',
+    Minivan: 'Minivan',
+    'Electric SUV': 'Electric SUV',
+    'Electric Sedan': 'Electric Sedan',
+    Crossover: 'Crossover',
+    'Compact Car': 'Compact Car',
+    'Full-size Car': 'Full-size Car',
+    'Sports Car': 'Sports Car',
+    'Luxury Car': 'Luxury Car',
+    'Off-road': 'Off-road',
+    'Taxi Type': 'Taxi Type',
+    Other: 'Other',
+  },
 };
 
 const hy: CarDetailTranslations = {
@@ -271,6 +322,28 @@ const hy: CarDetailTranslations = {
   limit: '\u054d\u0561\u0570\u0574\u0561\u0576\u0561\u0583\u0561\u056f\u0578\u0582\u0574',
   success: '\u0540\u0561\u057b\u0578\u0572\u0578\u0582\u0569\u0575\u0578\u0582\u0576',
   pleaseWait: '\u053d\u0576\u0564\u0580\u0578\u0582\u0574 \u0565\u0576\u0584 \u057d\u057a\u0561\u057d\u0565\u0584',
+  colors: {
+    White: '\u054d\u057a\u056b\u057f\u0561\u056f',
+    Black: '\u054d\u0587',
+    Silver: '\u0531\u0580\u0581\u0561\u0569\u0561\u0563\u0578\u0582\u0575\u0576',
+    Gray: '\u0544\u0578\u056d\u0580\u0561\u0563\u0578\u0582\u0575\u0576',
+    Blue: '\u053f\u0561\u057a\u0578\u0582\u0575\u0569',
+    Red: '\u053f\u0561\u0580\u0574\u056b\u0580',
+    Green: '\u053f\u0561\u0576\u0561\u0579',
+    Yellow: '\u0534\u0572\u056b\u0576',
+    Orange: '\u0546\u0561\u0580\u0576\u057b\u0561\u0563\u0578\u0582\u0575\u0576',
+    Brown: '\u0534\u0561\u0580\u0579\u0576\u0561\u0563\u0578\u0582\u0575\u0576',
+    Beige: '\u0532\u0565\u056a',
+    Gold: '\u0548\u057d\u056f\u0565\u0563\u0578\u0582\u0575\u0576',
+    Purple: '\u0544\u0561\u0576\u0578\u0582\u0577\u0561\u056f\u0561\u0563\u0578\u0582\u0575\u0576',
+    Pink: '\u054e\u0561\u0580\u0564\u0561\u0563\u0578\u0582\u0575\u0576',
+    Burgundy: '\u0532\u0578\u0580\u0564\u0578',
+    Navy: '\u0544\u0578\u0582\u0563 \u053f\u0561\u057a\u0578\u0582\u0575\u0569',
+    'Dark Green': '\u0544\u0578\u0582\u0563 \u053f\u0561\u0576\u0561\u0579',
+    'Light Blue': '\u0532\u0561\u0581 \u053f\u0561\u057a\u0578\u0582\u0575\u0569',
+    Champagne: '\u0547\u0561\u0574\u057a\u0561\u0575\u0576',
+    Other: '\u0531\u0575\u056c',
+  },
 };
 
 const ru: CarDetailTranslations = {
@@ -362,6 +435,49 @@ const ru: CarDetailTranslations = {
   limit: '\u041b\u0438\u043c\u0438\u0442',
   success: '\u0423\u0441\u043f\u0435\u0448\u043d\u043e',
   pleaseWait: '\u041f\u043e\u0434\u043e\u0436\u0434\u0438\u0442\u0435',
+  colors: {
+    White: '\u0411\u0435\u043b\u044b\u0439',
+    Black: '\u0427\u0435\u0440\u043d\u044b\u0439',
+    Silver: '\u0421\u0435\u0440\u0435\u0431\u0440\u0438\u0441\u0442\u044b\u0439',
+    Gray: '\u0421\u0435\u0440\u044b\u0439',
+    Blue: '\u0421\u0438\u043d\u0438\u0439',
+    Red: '\u041a\u0440\u0430\u0441\u043d\u044b\u0439',
+    Green: '\u0417\u0435\u043b\u0435\u043d\u044b\u0439',
+    Yellow: '\u0416\u0435\u043b\u0442\u044b\u0439',
+    Orange: '\u041e\u0440\u0430\u043d\u0436\u0435\u0432\u044b\u0439',
+    Brown: '\u041a\u043e\u0440\u0438\u0447\u043d\u0435\u0432\u044b\u0439',
+    Beige: '\u0411\u0435\u0436\u0435\u0432\u044b\u0439',
+    Gold: '\u0417\u043e\u043b\u043e\u0442\u043e\u0439',
+    Purple: '\u0424\u0438\u043e\u043b\u0435\u0442\u043e\u0432\u044b\u0439',
+    Pink: '\u0420\u043e\u0437\u043e\u0432\u044b\u0439',
+    Burgundy: '\u0411\u043e\u0440\u0434\u043e\u0432\u044b\u0439',
+    Navy: '\u0422\u0435\u043c\u043d\u043e-\u0441\u0438\u043d\u0438\u0439',
+    'Dark Green': '\u0422\u0435\u043c\u043d\u043e-\u0437\u0435\u043b\u0435\u043d\u044b\u0439',
+    'Light Blue': '\u0413\u043e\u043b\u0443\u0431\u043e\u0439',
+    Champagne: '\u0428\u0430\u043c\u043f\u0430\u043d\u044c',
+    Other: '\u0414\u0440\u0443\u0433\u043e\u0439',
+  },
+  types: {
+    Sedan: '\u0421\u0435\u0434\u0430\u043d',
+    SUV: 'SUV',
+    Hatchback: '\u0425\u044d\u0442\u0447\u0431\u0435\u043a',
+    Coupe: '\u041a\u0443\u043f\u0435',
+    Convertible: '\u041a\u0430\u0431\u0440\u0438\u043e\u043b\u0435\u0442',
+    Wagon: '\u0423\u043d\u0438\u0432\u0435\u0440\u0441\u0430\u043b',
+    Van: '\u0424\u0443\u0440\u0433\u043e\u043d',
+    Pickup: '\u041f\u0438\u043a\u0430\u043f',
+    Minivan: '\u041c\u0438\u043d\u0438\u0432\u044d\u043d',
+    'Electric SUV': '\u042d\u043b\u0435\u043a\u0442\u0440\u0438\u0447\u0435\u0441\u043a\u0438\u0439 SUV',
+    'Electric Sedan': '\u042d\u043b\u0435\u043a\u0442\u0440\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u0441\u0435\u0434\u0430\u043d',
+    Crossover: '\u041a\u0440\u043e\u0441\u0441\u043e\u0432\u0435\u0440',
+    'Compact Car': '\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c',
+    'Full-size Car': '\u041f\u043e\u043b\u043d\u0440\u0430\u0437\u043c\u0435\u0440\u043d\u044b\u0439 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c',
+    'Sports Car': '\u0421\u043f\u043e\u0440\u0442\u0438\u0432\u043d\u044b\u0439 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c',
+    'Luxury Car': '\u041b\u044e\u043a\u0441\u043e\u0432\u044b\u0439 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c',
+    'Off-road': '\u0412\u043d\u0435\u0434\u043e\u0440\u043e\u0436\u043d\u0438\u043a',
+    'Taxi Type': '\u0422\u0438\u043f \u0442\u0430\u043a\u0441\u0438',
+    Other: '\u0414\u0440\u0443\u0433\u043e\u0439',
+  },
 };
 
 export const carDetailTranslations: Record<Language, CarDetailTranslations> = {

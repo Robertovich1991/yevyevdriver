@@ -56,6 +56,78 @@ interface CarData {
   photos: CarPhoto[];
 }
 
+const CAR_BRANDS: string[] = [
+  'Toyota',
+  'Honda',
+  'Ford',
+  'Chevrolet',
+  'Nissan',
+  'BMW',
+  'Mercedes-Benz',
+  'Audi',
+  'Volkswagen',
+  'Hyundai',
+  'Kia',
+  'Lexus',
+  'Subaru',
+  'Mazda',
+  'Volvo',
+  'Porsche',
+  'Tesla',
+  'Jeep',
+  'Renault',
+  'Peugeot',
+  'Lada',
+  'Skoda',
+  'Opel',
+  'Citroen',
+];
+
+const CAR_COLORS: string[] = [
+  'White',
+  'Black',
+  'Silver',
+  'Gray',
+  'Blue',
+  'Red',
+  'Green',
+  'Yellow',
+  'Orange',
+  'Brown',
+  'Beige',
+  'Gold',
+  'Purple',
+  'Pink',
+  'Burgundy',
+  'Navy',
+  'Dark Green',
+  'Light Blue',
+  'Champagne',
+  'Other',
+];
+
+const CAR_TYPES: string[] = [
+  'Sedan',
+  'SUV',
+  'Hatchback',
+  'Coupe',
+  'Convertible',
+  'Wagon',
+  'Van',
+  'Pickup',
+  'Minivan',
+  'Electric SUV',
+  'Electric Sedan',
+  'Crossover',
+  'Compact Car',
+  'Full-size Car',
+  'Sports Car',
+  'Luxury Car',
+  'Off-road',
+  'Taxi Type',
+  'Other',
+];
+
 export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { carId, car } = route.params || {};
   const isEditing = !!carId || !!car;
@@ -73,6 +145,9 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     seats: '',
     photos: [],
   });
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showColorDropdown, setShowColorDropdown] = useState(false);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -673,12 +748,60 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.carInformation}</Text>
 
-          <TextInputField
-            label={t.brand}
-            placeholder={t.brandPlaceholder}
-            value={carData.brand}
-            onChangeText={text => setCarData({ ...carData, brand: text })}
-          />
+          <View style={styles.brandFieldWrapper}>
+            <Text style={styles.brandLabel}>{t.brand}</Text>
+            <TouchableOpacity
+              style={styles.brandSelect}
+              onPress={() => setShowBrandDropdown(prev => !prev)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={
+                  carData.brand
+                    ? styles.brandSelectedText
+                    : styles.brandPlaceholderText
+                }
+              >
+                {carData.brand || t.brandPlaceholder}
+              </Text>
+              <Icon
+                name="arrow-left"
+                size={18}
+                color={theme.colors.textSecondary}
+                style={{ transform: [{ rotate: '270deg' }] }}
+              />
+            </TouchableOpacity>
+            {showBrandDropdown && (
+              <View style={styles.brandDropdown}>
+                <ScrollView nestedScrollEnabled>
+                  {CAR_BRANDS.map(brand => (
+                    <TouchableOpacity
+                      key={brand}
+                      style={[
+                        styles.brandOption,
+                        carData.brand === brand && styles.brandOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setCarData({ ...carData, brand });
+                        setShowBrandDropdown(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.brandOptionText,
+                          carData.brand === brand &&
+                            styles.brandOptionTextSelected,
+                        ]}
+                      >
+                        {brand}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
           <TextInputField
             label={t.model}
             placeholder={t.modelPlaceholder}
@@ -692,12 +815,62 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             value={carData.year}
             onChangeText={text => setCarData({ ...carData, year: text })}
           />
-          <TextInputField
-            label={t.color}
-            placeholder={t.colorPlaceholder}
-            value={carData.color}
-            onChangeText={text => setCarData({ ...carData, color: text })}
-          />
+          <View style={styles.colorFieldWrapper}>
+            <Text style={styles.colorLabel}>{t.color}</Text>
+            <TouchableOpacity
+              style={styles.colorSelect}
+              onPress={() => setShowColorDropdown(prev => !prev)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={
+                  carData.color
+                    ? styles.colorSelectedText
+                    : styles.colorPlaceholderText
+                }
+              >
+                {carData.color
+                  ? t.colors?.[carData.color] || carData.color
+                  : t.colorPlaceholder}
+              </Text>
+              <Icon
+                name="arrow-left"
+                size={18}
+                color={theme.colors.textSecondary}
+                style={{ transform: [{ rotate: '270deg' }] }}
+              />
+            </TouchableOpacity>
+            {showColorDropdown && (
+              <View style={styles.colorDropdown}>
+                <ScrollView nestedScrollEnabled>
+                  {CAR_COLORS.map(color => (
+                    <TouchableOpacity
+                      key={color}
+                      style={[
+                        styles.colorOption,
+                        carData.color === color && styles.colorOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setCarData({ ...carData, color });
+                        setShowColorDropdown(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.colorOptionText,
+                          carData.color === color &&
+                            styles.colorOptionTextSelected,
+                        ]}
+                      >
+                        {t.colors?.[color] || color}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
           <TextInputField
             label={t.licensePlate}
             placeholder={t.licensePlatePlaceholder}
@@ -707,12 +880,62 @@ export const CarDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               setCarData({ ...carData, licensePlate: text })
             }
           />
-          <TextInputField
-            label={t.carType}
-            placeholder={t.carTypePlaceholder}
-            value={carData.type}
-            onChangeText={text => setCarData({ ...carData, type: text })}
-          />
+          <View style={styles.typeFieldWrapper}>
+            <Text style={styles.typeLabel}>{t.carType}</Text>
+            <TouchableOpacity
+              style={styles.typeSelect}
+              onPress={() => setShowTypeDropdown(prev => !prev)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={
+                  carData.type
+                    ? styles.typeSelectedText
+                    : styles.typePlaceholderText
+                }
+              >
+                {carData.type
+                  ? t.types?.[carData.type] || carData.type
+                  : t.carTypePlaceholder}
+              </Text>
+              <Icon
+                name="arrow-left"
+                size={18}
+                color={theme.colors.textSecondary}
+                style={{ transform: [{ rotate: '270deg' }] }}
+              />
+            </TouchableOpacity>
+            {showTypeDropdown && (
+              <View style={styles.typeDropdown}>
+                <ScrollView nestedScrollEnabled>
+                  {CAR_TYPES.map(type => (
+                    <TouchableOpacity
+                      key={type}
+                      style={[
+                        styles.typeOption,
+                        carData.type === type && styles.typeOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setCarData({ ...carData, type });
+                        setShowTypeDropdown(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.typeOptionText,
+                          carData.type === type &&
+                            styles.typeOptionTextSelected,
+                        ]}
+                      >
+                        {t.types?.[type] || type}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
           <TextInputField
             label={t.seats}
             placeholder={t.seatsPlaceholder}
@@ -949,5 +1172,161 @@ const styles = StyleSheet.create({
   },
   deleteButtonContainer: {
     marginTop: theme.spacing.sm,
+  },
+  brandFieldWrapper: {
+    marginBottom: theme.spacing.md,
+  },
+  brandLabel: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: theme.spacing.xs,
+    color: theme.colors.textSecondary,
+  },
+  brandSelect: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    minHeight: 48,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  brandSelectedText: {
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
+  brandPlaceholderText: {
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.textLight,
+  },
+  brandDropdown: {
+    marginTop: theme.spacing.xs,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.spacing.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    maxHeight: 220,
+    overflow: 'hidden',
+  },
+  brandOption: {
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  brandOptionSelected: {
+    backgroundColor: theme.colors.backgroundLight,
+  },
+  brandOptionText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textPrimary,
+  },
+  brandOptionTextSelected: {
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  colorFieldWrapper: {
+    marginBottom: theme.spacing.md,
+  },
+  colorLabel: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: theme.spacing.xs,
+    color: theme.colors.textSecondary,
+  },
+  colorSelect: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    minHeight: 48,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  colorSelectedText: {
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
+  colorPlaceholderText: {
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.textLight,
+  },
+  colorDropdown: {
+    marginTop: theme.spacing.xs,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.spacing.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    maxHeight: 220,
+    overflow: 'hidden',
+  },
+  colorOption: {
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  colorOptionSelected: {
+    backgroundColor: theme.colors.backgroundLight,
+  },
+  colorOptionText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textPrimary,
+  },
+  colorOptionTextSelected: {
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  typeFieldWrapper: {
+    marginBottom: theme.spacing.md,
+  },
+  typeLabel: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: theme.spacing.xs,
+    color: theme.colors.textSecondary,
+  },
+  typeSelect: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    minHeight: 48,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  typeSelectedText: {
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
+  typePlaceholderText: {
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.textLight,
+  },
+  typeDropdown: {
+    marginTop: theme.spacing.xs,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.spacing.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    maxHeight: 220,
+    overflow: 'hidden',
+  },
+  typeOption: {
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  typeOptionSelected: {
+    backgroundColor: theme.colors.backgroundLight,
+  },
+  typeOptionText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textPrimary,
+  },
+  typeOptionTextSelected: {
+    fontWeight: theme.typography.fontWeight.semibold,
   },
 });
