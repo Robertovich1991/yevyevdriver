@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,8 @@ import {
   isArmeniaPhonePrefixOnly,
   isValidArmeniaPhone,
 } from '../../utils/phone';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getCarDetailTranslations, getEditProfileTranslations } from '../../i18n/translations';
 
 interface UserData {
   name: string;
@@ -83,6 +85,9 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'EditProfile'>;
 
 export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { showAlert } = useAlert();
+  const language = useLanguageStore(s => s.language);
+  const t = useMemo(() => getEditProfileTranslations(language), [language]);
+  const tCar = useMemo(() => getCarDetailTranslations(language), [language]);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
@@ -977,7 +982,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <ScreenContainer>
         <View style={styles.loadingContainer}>
-          <Text>Loading...</Text>
+          <Text>{t.loading}</Text>
         </View>
       </ScreenContainer>
     );
@@ -1002,7 +1007,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                 color={theme.colors.textPrimary}
               />
             </TouchableOpacity>
-            <Text style={styles.title}>Edit Profile</Text>
+            <Text style={styles.title}>{t.editProfile}</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -1078,24 +1083,24 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
           {/* Form Fields */}
           <View style={styles.form}>
             <TextInputField
-              label="Name *"
-              placeholder="Enter your name"
+              label={t.name}
+              placeholder={t.namePlaceholder}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
             />
 
             <TextInputField
-              label="Surname"
-              placeholder="Enter your surname"
+              label={t.surname}
+              placeholder={t.surnamePlaceholder}
               value={surname}
               onChangeText={setSurname}
               autoCapitalize="words"
             />
 
             <TextInputField
-              label="Email *"
-              placeholder="Enter your email"
+              label={t.email}
+              placeholder={t.emailPlaceholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -1104,8 +1109,8 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
             />
 
             <TextInputField
-              label="Phone"
-              placeholder="+374XXXXXXXX"
+              label={t.phone}
+              placeholder={t.phonePlaceholder}
               value={phone}
               onChangeText={text => setPhone(formatArmeniaPhoneInput(text))}
               keyboardType="phone-pad"
@@ -1113,11 +1118,11 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Current Car Selection */}
             <View style={styles.fieldWrapper}>
-              <Text style={styles.label}>Current Car</Text>
+              <Text style={styles.label}>{t.currentCar}</Text>
               {cars.length === 0 ? (
                 <View style={styles.noCarsContainer}>
                   <Text style={styles.noCarsText}>
-                    No cars available. Add a car first.
+                    {tCar.noCarsAddFirst}
                   </Text>
                   <TouchableOpacity
                     style={styles.addCarLink}
@@ -1129,7 +1134,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                       }, 100);
                     }}
                   >
-                    <Text style={styles.addCarLinkText}>+ Add Car</Text>
+                    <Text style={styles.addCarLinkText}>{tCar.addCarButton}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -1153,7 +1158,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                         currentCarId === null && styles.carOptionTextSelected,
                       ]}
                     >
-                      None
+                      {t.none}
                     </Text>
                   </TouchableOpacity>
                   {cars.map(car => (
@@ -1206,7 +1211,7 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
             {/* Driving Licence Photos */}
             <View style={styles.fieldWrapper}>
               <View style={styles.licenceHeader}>
-                <Text style={styles.label}>Driving Licence Photos</Text>
+                <Text style={styles.label}>{t.drivingLicencePhotos}</Text>
                 <TouchableOpacity
                   onPress={handleTakeLicencePhoto}
                   style={styles.addPhotoButton}
@@ -1214,19 +1219,19 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
                   activeOpacity={0.7}
                 >
                   {uploadingLicencePhoto ? (
-                    <Text style={styles.addPhotoButtonText}>Uploading...</Text>
+                    <Text style={styles.addPhotoButtonText}>{t.uploading}</Text>
                   ) : (
-                    <Text style={styles.addPhotoButtonText}>+ Add Photo</Text>
+                    <Text style={styles.addPhotoButtonText}>{t.addPhoto}</Text>
                   )}
                 </TouchableOpacity>
               </View>
               {drivingLicencePhotos.length === 0 ? (
                 <View style={styles.emptyPhotosContainer}>
                   <Text style={styles.emptyPhotosText}>
-                    No photos added yet
+                    {t.noPhotosYet}
                   </Text>
                   <Text style={styles.emptyPhotosHint}>
-                    Tap "Add Photo" to add driving licence photos
+                    {t.tapToAddLicencePhotos}
                   </Text>
                 </View>
               ) : (
@@ -1284,11 +1289,11 @@ export const EditProfileScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>{t.cancel}</Text>
           </TouchableOpacity>
           <View style={styles.saveButtonContainer}>
             <Button
-              title={saving ? 'Saving...' : 'Save Changes'}
+              title={saving ? t.saving : t.saveChanges}
               onPress={handleSave}
               disabled={saving}
               loading={saving}

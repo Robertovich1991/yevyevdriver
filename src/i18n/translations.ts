@@ -8,6 +8,14 @@ export interface CarDetailTranslations {
   // Section titles
   carInformation: string;
   carPhotos: string;
+  myCars: string;
+
+  // Profile car section
+  addCarButton: string;
+  loadingCars: string;
+  noCarsYet: string;
+  tapToAddFirstCar: string;
+  noCarsAddFirst: string;
 
   // Labels
   brand: string;
@@ -107,6 +115,12 @@ const en: CarDetailTranslations = {
   // Section titles
   carInformation: 'Car Information',
   carPhotos: 'Car Photos',
+  myCars: 'My Cars',
+  addCarButton: '+ Add Car',
+  loadingCars: 'Loading cars...',
+  noCarsYet: 'No cars added yet',
+  tapToAddFirstCar: 'Tap to add your first car',
+  noCarsAddFirst: 'No cars available. Add a car first.',
 
   // Labels
   brand: 'Brand',
@@ -241,6 +255,12 @@ const hy: CarDetailTranslations = {
   // Section titles
   carInformation: '\u0544\u0565\u0584\u0565\u0576\u0561\u0575\u056b \u057f\u0565\u0572\u0565\u056f\u0578\u0582\u0569\u0575\u0578\u0582\u0576',
   carPhotos: '\u0544\u0565\u0584\u0565\u0576\u0561\u0575\u056b \u056c\u0578\u0582\u057d\u0561\u0576\u056f\u0561\u0580\u0576\u0565\u0580',
+  myCars: '\u053b\u0574 \u0574\u0565\u0584\u0565\u0576\u0561\u0576\u0565\u0580',
+  addCarButton: '+ \u0531\u057e\u0565\u056c\u0561\u0581\u0576\u0565\u056c \u0574\u0565\u0584\u0565\u0576\u0561',
+  loadingCars: '\u0532\u0565\u057c\u0576\u057e\u0578\u0582\u0574 \u0567 \u0574\u0565\u0584\u0565\u0576\u0561\u0576\u0565\u0580\u0568...',
+  noCarsYet: '\u0534\u0565\u0580 \u0574\u0565\u0584\u0565\u0576\u0561\u0576\u0565\u0580 \u0579\u0565\u0576 \u0561\u057e\u0565\u056c\u0561\u0581\u057e\u0565\u056c',
+  tapToAddFirstCar: '\u054d\u0565\u0562\u0564\u0565\u0584 \u0571\u0565\u0580 \u0561\u0580\u0561\u0563\u056b\u0576 \u0574\u0565\u0584\u0565\u0576\u0561\u0576 \u0561\u057e\u0565\u056c\u0561\u0581\u0576\u0565\u056c\u0582 \u0570\u0561\u0574\u0561\u0580',
+  noCarsAddFirst: '\u0544\u0565\u0584\u0565\u0576\u0561\u0576\u0565\u0580 \u0579\u056f\u0561\u0576: \u0546\u0561\u056d \u0561\u057e\u0565\u056c\u0561\u0581\u0580\u0565\u0584 \u0574\u0565\u0584\u0565\u0576\u0561:',
 
   // Labels
   brand: 'Մակնիշ',
@@ -354,6 +374,12 @@ const ru: CarDetailTranslations = {
   // Section titles
   carInformation: '\u0418\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e\u0431 \u0430\u0432\u0442\u043e',
   carPhotos: '\u0424\u043e\u0442\u043e \u0430\u0432\u0442\u043e',
+  myCars: '\u041c\u043e\u0438 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u0438',
+  addCarButton: '+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0430\u0432\u0442\u043e',
+  loadingCars: '\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u0435\u0439...',
+  noCarsYet: '\u0410\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u0438 \u043f\u043e\u043a\u0430 \u043d\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u044b',
+  tapToAddFirstCar: '\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u0435\u0440\u0432\u044b\u0439 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c',
+  noCarsAddFirst: '\u041d\u0435\u0442 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b\u0445 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u0435\u0439. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0434\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c.',
 
   // Labels
   brand: '\u041c\u0430\u0440\u043a\u0430',
@@ -1004,6 +1030,109 @@ export const tabNavigatorTranslations: Record<Language, TabNavigatorTranslations
 
 export const getTabNavigatorTranslations = (language: Language): TabNavigatorTranslations => {
   return tabNavigatorTranslations[language] || tabNavigatorTranslations.en;
+};
+
+// Edit Profile Screen Translations
+export interface EditProfileTranslations {
+  editProfile: string;
+  loading: string;
+  name: string;
+  namePlaceholder: string;
+  surname: string;
+  surnamePlaceholder: string;
+  email: string;
+  emailPlaceholder: string;
+  phone: string;
+  phonePlaceholder: string;
+  currentCar: string;
+  none: string;
+  drivingLicencePhotos: string;
+  addPhoto: string;
+  uploading: string;
+  noPhotosYet: string;
+  tapToAddLicencePhotos: string;
+  cancel: string;
+  saveChanges: string;
+  saving: string;
+}
+
+const editProfileEn: EditProfileTranslations = {
+  editProfile: 'Edit Profile',
+  loading: 'Loading...',
+  name: 'Name *',
+  namePlaceholder: 'Enter your name',
+  surname: 'Surname',
+  surnamePlaceholder: 'Enter your surname',
+  email: 'Email *',
+  emailPlaceholder: 'Enter your email',
+  phone: 'Phone',
+  phonePlaceholder: '+374XXXXXXXX',
+  currentCar: 'Current Car',
+  none: 'None',
+  drivingLicencePhotos: 'Driving Licence Photos',
+  addPhoto: '+ Add Photo',
+  uploading: 'Uploading...',
+  noPhotosYet: 'No photos added yet',
+  tapToAddLicencePhotos: 'Tap "Add Photo" to add driving licence photos',
+  cancel: 'Cancel',
+  saveChanges: 'Save Changes',
+  saving: 'Saving...',
+};
+
+const editProfileHy: EditProfileTranslations = {
+  editProfile: 'Խմբագրել պրոֆիլը',
+  loading: 'Բեռնվում է...',
+  name: 'Անուն *',
+  namePlaceholder: 'Մուտքագրեք ձեր անունը',
+  surname: 'Ազգանուն',
+  surnamePlaceholder: 'Մուտքագրեք ձեր ազգանունը',
+  email: 'Էլ. փոստ *',
+  emailPlaceholder: 'Մուտքագրեք ձեր էլ. փոստը',
+  phone: 'Հեռախոս',
+  phonePlaceholder: '+374XXXXXXXX',
+  currentCar: 'Ընթացիկ մեքենա',
+  none: 'Ոչ մեկը',
+  drivingLicencePhotos: 'Վարորդական իրավունքի լուսանկարներ',
+  addPhoto: '+ Ավելացնել լուսանկար',
+  uploading: 'Բեռնվում է...',
+  noPhotosYet: 'Լուսանկարներ դեռ չեն ավելացվել',
+  tapToAddLicencePhotos: 'Սեղմեք «Ավելացնել լուսանկար» վարորդական իրավունքի լուսանկարներ ավելացնելու համար',
+  cancel: 'Չեղարկել',
+  saveChanges: 'Պահպանել փոփոխությունները',
+  saving: 'Պահպանվում է...',
+};
+
+const editProfileRu: EditProfileTranslations = {
+  editProfile: 'Редактировать профиль',
+  loading: 'Загрузка...',
+  name: 'Имя *',
+  namePlaceholder: 'Введите ваше имя',
+  surname: 'Фамилия',
+  surnamePlaceholder: 'Введите вашу фамилию',
+  email: 'Email *',
+  emailPlaceholder: 'Введите ваш email',
+  phone: 'Телефон',
+  phonePlaceholder: '+374XXXXXXXX',
+  currentCar: 'Текущий автомобиль',
+  none: 'Нет',
+  drivingLicencePhotos: 'Фото водительского удостоверения',
+  addPhoto: '+ Добавить фото',
+  uploading: 'Загрузка...',
+  noPhotosYet: 'Фото пока не добавлены',
+  tapToAddLicencePhotos: 'Нажмите «Добавить фото», чтобы добавить фото водительского удостоверения',
+  cancel: 'Отмена',
+  saveChanges: 'Сохранить изменения',
+  saving: 'Сохранение...',
+};
+
+export const editProfileTranslations: Record<Language, EditProfileTranslations> = {
+  en: editProfileEn,
+  hy: editProfileHy,
+  ru: editProfileRu,
+};
+
+export const getEditProfileTranslations = (language: Language): EditProfileTranslations => {
+  return editProfileTranslations[language] || editProfileTranslations.en;
 };
 
 // Availability List Screen Translations

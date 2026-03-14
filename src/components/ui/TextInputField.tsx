@@ -12,16 +12,30 @@ import { typography } from '../../assets/style/typography';
 
 interface Props extends TextInputProps {
   label: string;
+  /** Optional element rendered on the right (e.g. password visibility toggle) */
+  rightElement?: React.ReactNode;
 }
 
-export const TextInputField: React.FC<Props> = ({ label, ...rest }) => (
+export const TextInputField: React.FC<Props> = ({
+  label,
+  rightElement,
+  style,
+  ...rest
+}) => (
   <View style={styles.wrapper}>
     <Text style={styles.label}>{label}</Text>
-    <TextInput
-      style={styles.input}
-      placeholderTextColor={colors.textLight}
-      {...rest}
-    />
+    <View style={styles.inputRow}>
+      <TextInput
+        style={[styles.input, rightElement ? styles.inputWithRight : null, style]}
+        placeholderTextColor={colors.textLight}
+        {...rest}
+      />
+      {rightElement ? (
+        <View style={styles.rightElement} pointerEvents="box-none">
+          {rightElement}
+        </View>
+      ) : null}
+    </View>
   </View>
 );
 
@@ -33,6 +47,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     color: colors.textSecondary,
   },
+  inputRow: {
+    position: 'relative',
+  },
   input: {
     backgroundColor: colors.white,
     minHeight: 48,
@@ -43,5 +60,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     fontSize: typography.fontSize.md,
     color: colors.textPrimary,
+  },
+  inputWithRight: {
+    paddingRight: 48,
+  },
+  rightElement: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    paddingRight: spacing.sm,
   },
 });

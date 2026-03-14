@@ -6,6 +6,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { TextInputField } from '../../components/ui/TextInputField';
 import { Button } from '../../components/ui/Button';
+import { Icon } from '../../assets/icons/Icon';
+import { theme } from '../../assets/style/theme';
 import type { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -23,6 +25,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { showAlert } = useAlert();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const setUser = useAuthStore(s => s.setUser);
   const setToken = useAuthStore(s => s.setToken);
@@ -164,10 +167,22 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       />
       <TextInputField
         label="Password"
-        secureTextEntry
+        secureTextEntry={!showPassword}
         placeholder="Enter your password"
         value={password}
         onChangeText={setPassword}
+        rightElement={
+          <TouchableOpacity
+            onPress={() => setShowPassword(prev => !prev)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Icon
+              name={showPassword ? 'eye-close' : 'eye'}
+              size={22}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        }
       />
       <Button title="Login" onPress={handleLogin} loading={loading} />
       <View style={styles.footer}>

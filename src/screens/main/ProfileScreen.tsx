@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Text,
   View,
@@ -34,6 +34,8 @@ import {
 } from '../../config/api';
 import { useAlert } from '../../context/AlertContext';
 import { Button } from '../../components/ui/Button';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { getCarDetailTranslations } from '../../i18n/translations';
 interface UserData {
   name: string;
   surname: string;
@@ -66,6 +68,8 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'Profile'>;
 export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { showAlert } = useAlert();
   const profile = useDriverStore(s => s.profile);
+  const language = useLanguageStore(s => s.language);
+  const t = useMemo(() => getCarDetailTranslations(language), [language]);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
@@ -826,18 +830,18 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         {/* Cars List Section */}
         <View style={styles.section}>
           <View style={styles.carsHeader}>
-            <Text style={styles.sectionTitle}>My Cars</Text>
+            <Text style={styles.sectionTitle}>{t.myCars}</Text>
             <TouchableOpacity
               onPress={handleAddCar}
               style={styles.addCarButton}
             >
-              <Text style={styles.addCarText}>+ Add Car</Text>
+              <Text style={styles.addCarText}>{t.addCarButton}</Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
             <View style={styles.emptyCarsContainer}>
-              <Text style={styles.emptyCarsText}>Loading cars...</Text>
+              <Text style={styles.emptyCarsText}>{t.loadingCars}</Text>
             </View>
           ) : cars.length === 0 ? (
             <TouchableOpacity
@@ -845,9 +849,9 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.emptyCarsContainer}
             >
               <Icon name="logo-circle" size={64} color={theme.colors.primary} />
-              <Text style={styles.emptyCarsText}>No cars added yet</Text>
+              <Text style={styles.emptyCarsText}>{t.noCarsYet}</Text>
               <Text style={styles.emptyCarsHint}>
-                Tap to add your first car
+                {t.tapToAddFirstCar}
               </Text>
             </TouchableOpacity>
           ) : (

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { OrdersScreen } from '../screens/main/OrdersScreen';
+import { OrdersStackNavigator } from './OrdersStackNavigator';
 import { SettingsScreen } from '../screens/main/SettingsScreen';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { ScheduleStackNavigator } from './ScheduleStackNavigator';
@@ -73,7 +73,7 @@ export const AppTabsNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Orders"
-        component={OrdersScreen}
+        component={OrdersStackNavigator}
         options={{
           tabBarLabel: t.orders,
           tabBarIcon: ({ color }) => (

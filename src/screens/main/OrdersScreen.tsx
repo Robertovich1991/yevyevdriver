@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -10,6 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { OrdersStackParamList } from './TripOrdersScreen';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
@@ -83,6 +85,7 @@ const mapNestedOrderToUi = (
   unknownCustomerText: string,
 ): Order => {
   const rawId = order?.id ?? order?.orderId ?? order?._id ?? `${index}`;
+console.log(order,'[[[[[[[[[[[[[[[[[[[[[[');
 
   return {
     id: String(rawId),
@@ -201,8 +204,8 @@ export const OrdersScreen: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [selectedTrip, setSelectedTrip] = useState<TripItem | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<OrdersStackParamList, 'OrdersList'>>();
   const [seenTripIds, setSeenTripIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -342,14 +345,8 @@ export const OrdersScreen: React.FC = () => {
   };
 
   const handleTripPress = (trip: TripItem) => {
-    setSelectedTrip(trip);
-    setModalVisible(true);
     markTripAsSeen(trip.id);
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedTrip(null);
+    navigation.navigate('TripOrders', { trip });
   };
 
   const onDateChange = (_event: any, date?: Date) => {
@@ -372,18 +369,13 @@ export const OrdersScreen: React.FC = () => {
   );
 
   const renderTripItem = ({ item }: { item: TripItem }) => {
-    const isSelected = selectedTrip?.id === item.id;
     const isSeen = seenTripIds.has(item.id);
 
     return (
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => handleTripPress(item)}
-        style={[
-          styles.orderCard,
-          isSelected && styles.orderCardSelected,
-          isSeen && !isSelected && styles.orderCardSeen,
-        ]}
+        style={[styles.orderCard, isSeen && styles.orderCardSeen]}
       >
         <View style={styles.orderHeader}>
           <Text style={styles.orderName}>{`${t.trip} ${item.time}`}</Text>
@@ -510,93 +502,6 @@ export const OrdersScreen: React.FC = () => {
           </View>
         }
       />
-
-      {/* Order Details Modal */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleCloseModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {selectedTrip && (
-                <>
-                  <View style={styles.modalHeader}>
-                    <Text
-                      style={styles.modalTitle}
-                    >{`${t.trip} ${selectedTrip.time} ${t.ordersLabel}`}</Text>
-                    <TouchableOpacity
-                      onPress={handleCloseModal}
-                      style={styles.closeButton}
-                    >
-                      <Text style={styles.closeButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.modalBody}>
-                    <View style={styles.modalSection}>
-                      <Text style={styles.modalSectionTitle}>
-                        {t.tripInformation}
-                      </Text>
-                      <View style={styles.modalDetailRow}>
-                        <Text
-                          style={styles.modalDetailLabel}
-                        >{`${t.date}:`}</Text>
-                        <Text style={styles.modalDetailValue}>
-                          {selectedTrip.date}
-                        </Text>
-                      </View>
-                      <View style={styles.modalDetailRow}>
-                        <Text
-                          style={styles.modalDetailLabel}
-                        >{`${t.time}:`}</Text>
-                        <Text style={styles.modalDetailValue}>
-                          {selectedTrip.time}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.modalSection}>
-                      <Text style={styles.modalSectionTitle}>
-                        {t.ordersLabel}
-                      </Text>
-                      {selectedTrip.orders.length === 0 ? (
-                        <Text style={styles.emptyText}>{t.noOrdersInTrip}</Text>
-                      ) : (
-                        selectedTrip.orders.map(order => (
-                          <View key={order.id} style={styles.tripOrderItem}>
-                            <Text style={styles.tripOrderName}>
-                              {order.name}
-                            </Text>
-                            <Text
-                              style={styles.tripOrderText}
-                            >{`${t.phone}: ${order.phoneNumber}`}</Text>
-                            <Text
-                              style={styles.tripOrderText}
-                            >{`${t.from}: ${order.startAddress}`}</Text>
-                            <Text
-                              style={styles.tripOrderText}
-                            >{`${t.to}: ${order.endAddress}`}</Text>
-                            <Text
-                              style={styles.tripOrderText}
-                            >{`${t.passengers}: ${order.personCount}`}</Text>
-                          </View>
-                        ))
-                      )}
-                    </View>
-                  </View>
-                </>
-              )}
-
-              <View style={styles.modalFooter}>
-                <Button title={t.close} onPress={handleCloseModal} />
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </ScreenContainer>
   );
 };
@@ -785,98 +690,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: typography.fontSize.md,
     color: colors.textLight,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: spacing.borderRadius.xl,
-    borderTopRightRadius: spacing.borderRadius.xl,
-    maxHeight: '80%',
-    paddingBottom: spacing.md,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.md + spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.textPrimary,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.borderLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: typography.fontSize.lg,
-    color: colors.textSecondary,
-    fontWeight: typography.fontWeight.bold,
-  },
-  modalBody: {
-    padding: spacing.md + spacing.xs,
-  },
-  modalSection: {
-    marginBottom: spacing.lg,
-  },
-  modalSectionTitle: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm + spacing.xs,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalDetailRow: {
-    flexDirection: 'row',
-    marginBottom: spacing.sm + spacing.xs,
-    paddingVertical: 8,
-  },
-  modalDetailLabel: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.textSecondary,
-    width: 100,
-  },
-  modalDetailValue: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textPrimary,
-    flex: 1,
-    fontWeight: typography.fontWeight.medium,
-  },
-  modalFooter: {
-    paddingHorizontal: spacing.md + spacing.xs,
-    paddingTop: spacing.sm,
-  },
-  tripOrderItem: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: spacing.borderRadius.sm,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.backgroundLight,
-  },
-  tripOrderName: {
-    color: colors.textPrimary,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semibold,
-    marginBottom: spacing.xs,
-  },
-  tripOrderText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.sm,
-    marginBottom: spacing.xs,
   },
 });
